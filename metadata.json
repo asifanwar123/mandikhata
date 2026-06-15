@@ -1,0 +1,6 @@
+{
+  "name": "Mandi Khata",
+  "description": "An Urdu-first, Right-To-Left modern ERP replica for Sabzi Mandi commission agents, pesticide shops, and fertilizer dealers, featuring double-entry accounting, invoice printing, customer/supplier ledgers, and backup systems.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
