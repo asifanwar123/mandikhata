@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PromiseReminder, BusinessCard } from '../types';
 import { INITIAL_CARDS } from '../utils/initialData';
-import { Calendar, CheckSquare, Square, Download, Upload, Search, Share2, PhoneCall, Settings, Globe, Palette, Coins, HelpCircle, ShieldAlert, Lock, Unlock, Mail, FileText, Percent, ArrowLeft, Plus } from 'lucide-react';
+import { Calendar, CheckSquare, Square, Download, Upload, Search, Share2, PhoneCall, Settings, Globe, Palette, Coins, HelpCircle, ShieldAlert, Lock, Unlock, Mail, FileText, Percent, ArrowLeft, Plus, Trash2 } from 'lucide-react';
 
 interface BackupCalendarManagerProps {
   reminders: PromiseReminder[];
@@ -616,6 +616,24 @@ export default function BackupCalendarManager({
                     <HelpCircle className="w-3 h-3" />
                   </div>
                   <span>رابطہ، مدد و لکنس (Help & Trial)</span>
+                </div>
+              </button>
+
+              <button
+                onClick={() => {
+                  if (confirm('کیا آپ واقعی تمام کھاتہ جات، بل اور سیٹنگز کو فیکٹری ری سیٹ کرنا چاہتے ہیں؟ اس عمل کو واپس نہیں لیا جا سکتا۔\n\nAre you sure you want to restore the software to factory defaults? All account details, invoices, and purchase records will be permanently erased.')) {
+                    localStorage.clear();
+                    alert('ایپلیکیشن کامیابی کے ساتھ ری سیٹ ہو گئی ہے۔ اب پیج دوبارہ لوڈ ہوگا۔\n\nSoftware successfully reset! Returning to defaults.');
+                    window.location.reload();
+                  }
+                }}
+                className="w-full text-right px-4 py-2.5 rounded text-xs font-bold transition-all flex items-center justify-between border cursor-pointer bg-white hover:bg-rose-50 text-rose-700 border-rose-200"
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className="p-1 rounded bg-rose-100 text-rose-700">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </div>
+                  <span>فیکٹری ری سیٹ ڈیٹا (Factory Reset)</span>
                 </div>
               </button>
             </div>

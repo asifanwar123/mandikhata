@@ -780,15 +780,15 @@ export default function App() {
       </main>
 
       {/* FIXED CLASSIC DESKTOP FOOTER SCREEN STATUS BAR */}
-      <footer className="fixed bottom-0 left-0 right-0 h-10 bg-white border-t border-stone-200 shadow no-print flex justify-between items-center px-4 text-stone-500 font-sans select-none z-40">
-        <div className="flex gap-4 items-center">
+      <footer className="fixed bottom-0 left-0 right-0 min-h-[40px] md:h-10 py-1.5 md:py-0 bg-white border-t border-stone-200 shadow no-print flex flex-col md:flex-row justify-between items-center px-4 text-stone-500 font-sans select-none z-40 gap-1.5 md:gap-0">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
           <span className="flex items-center gap-1.5">
-            <span style={{ fontSize: '18px' }} className="font-sans font-bold text-stone-800">ڈویلپر فون :</span>
-            <span style={{ fontSize: '14px' }} className="font-sans font-medium">03026834300 | 03008885072</span>
+            <span style={{ fontSize: '15px' }} className="font-sans font-bold text-stone-800">ڈویلپر فون :</span>
+            <span style={{ fontSize: '13px' }} className="font-sans font-medium">03026834300 | 03008885072</span>
           </span>
 
-          <span className="flex items-center gap-1.5 border-r border-stone-200 pr-4">
-            <span style={{ fontSize: '14px' }} className="font-sans font-bold text-stone-800">صلاحیت (Admin Role):</span>
+          <span className="flex items-center gap-1.5 sm:border-r sm:border-stone-200 sm:pr-4">
+            <span style={{ fontSize: '13px' }} className="font-sans font-bold text-stone-800">صلاحیت (Admin Role):</span>
             <select 
               value={currentUserRole}
               onChange={(e) => setCurrentUserRole(e.target.value as any)}
@@ -804,12 +804,12 @@ export default function App() {
           </span>
         </div>
         
-        <div className="flex gap-2 items-center">
-          <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded border border-emerald-200 flex items-center gap-1.5">
-            <span style={{ fontSize: '18px' }}>آپریٹر سیشن:</span>
-            <span style={{ fontSize: '14px' }} className="font-mono font-bold">{username}</span>
+        <div className="flex gap-2.5 items-center">
+          <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-250 flex items-center gap-1.5 text-xs">
+            <span className="font-sans font-bold">آپریٹر سیشن:</span>
+            <span className="font-mono font-bold text-emerald-900">{username}</span>
           </span>
-          <span style={{ fontSize: '14px' }} className="font-mono text-stone-400">Version 1.11.0</span>
+          <span style={{ fontSize: '11px' }} className="font-mono text-stone-400">Version 1.11.0</span>
         </div>
       </footer>
     </div>

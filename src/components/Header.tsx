@@ -54,17 +54,11 @@ export default function Header({
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="flex items-center gap-3 border-l border-stone-200 pl-3 ml-1">
             <img 
-              src="/src/assets/images/veg_urdu_logo_1781537269966.jpg" 
+              src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzeDsAtCYGFKat6XlJLYjtDu8NG1T5Iha4xdptJP_gWWEUcbluAdLpjXR3-XD3usEeMKl7xWmGujm-kYfoW7ryp_iJnn94QsHGrUkGL7OrMsXaRH4mBhpMAKbRU6Qvlegj2xRYyhJCu7qlukIm-bOr8VQ2cn-4VGovUcAYJrjn13KbcCWZ-ZjMHEuD1Ts/s1600/Mandi_khata-Logo.png" 
               alt="Mandi Khata Vegetable Logo" 
               referrerPolicy="no-referrer"
-              className="w-14 h-14 rounded-full border-2 border-[#7BA100] object-cover shadow-sm" 
+              className="w-14 h-14 object-contain" 
             />
-            <div className="flex flex-col items-start text-right">
-              <span className="text-2xl font-sans font-black text-stone-900 leading-none mb-1">
-                منڈی کھاتہ
-              </span>
-              <span className="text-[10px] text-stone-600 font-sans tracking-widest font-black leading-none">MANDI KHATA ERP</span>
-            </div>
           </div>
         </div>
 
