@@ -231,6 +231,205 @@ export default function BackupCalendarManager({
     return saved ? parseInt(saved) : 3;
   });
 
+  // Backup Options and Google Drive States
+  const [backupOption, setBackupOption] = useState<'local' | 'gdrive'>(() => {
+    return (localStorage.getItem('mm_backup_pref') as 'local' | 'gdrive') || 'local';
+  });
+  const [gdriveToken, setGdriveToken] = useState<string>(() => {
+    return localStorage.getItem('mm_gdrive_token') || '';
+  });
+  const [gdriveFiles, setGdriveFiles] = useState<any[]>([]);
+  const [isLoadingGdriveFiles, setIsLoadingGdriveFiles] = useState(false);
+
+  React.useEffect(() => {
+    localStorage.setItem('mm_backup_pref', backupOption);
+  }, [backupOption]);
+
+  React.useEffect(() => {
+    // 1. Check if this instance is running inside the Google OAuth popup window
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token=') && window.opener) {
+      const tokenMatch = hash.match(/access_token=([^&]+)/);
+      if (tokenMatch) {
+        const token = tokenMatch[1];
+        // Communicate token back to parenting window
+        window.opener.postMessage({ type: 'GDRIVE_AUTH_SUCCESS', token }, window.location.origin);
+        window.close();
+      }
+    }
+
+    // 2. Parent window message listener
+    const handleOAuthMessage = (event: MessageEvent) => {
+      // Security check: must match our origin
+      if (event.origin !== window.location.origin) return;
+      if (event.data && event.data.type === 'GDRIVE_AUTH_SUCCESS') {
+        const token = event.data.token;
+        setGdriveToken(token);
+        localStorage.setItem('mm_gdrive_token', token);
+        alert('کامیابی! آپ کا گوگل ڈرائیو اکاؤنٹ کامیابی سے منسلک ہو گیا ہے۔');
+        fetchGdriveBackupList(token);
+      }
+    };
+
+    window.addEventListener('message', handleOAuthMessage);
+    return () => window.removeEventListener('message', handleOAuthMessage);
+  }, []);
+
+  React.useEffect(() => {
+    if (gdriveToken && backupOption === 'gdrive') {
+      fetchGdriveBackupList();
+    }
+  }, [gdriveToken, backupOption]);
+
+  const fetchGdriveBackupList = async (tokenToCheck?: string) => {
+    const activeToken = tokenToCheck || gdriveToken;
+    if (!activeToken) return;
+    setIsLoadingGdriveFiles(true);
+    try {
+      const response = await fetch("https://www.googleapis.com/drive/v3/files?q=name+contains+'mandi_khata_backup_'+and+mimeType='application/json'&orderBy=createdTime+desc&fields=files(id,name,createdTime,size)", {
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+      if (response.status === 401) {
+        setGdriveToken('');
+        localStorage.removeItem('mm_gdrive_token');
+        return;
+      }
+      const data = await response.json();
+      if (data && data.files) {
+        setGdriveFiles(data.files);
+      }
+    } catch (e) {
+      console.error("Error fetching Google Drive backups list:", e);
+    } finally {
+      setIsLoadingGdriveFiles(false);
+    }
+  };
+
+  const uploadToGoogleDrive = async () => {
+    if (!gdriveToken) {
+      alert('براہ کرم پہلے گوگل ڈرائیو لاگ ان کریں۔');
+      return;
+    }
+    setIsBackingUp(true);
+    setBackupStatus('گوگل ڈرائیو پر نیا کلاؤڈ بیک اپ اپلوڈ ہو رہا ہے...');
+    try {
+      const cleanCompName = companyName ? companyName.trim().replace(/\s+/g, '_') : 'MandiKhata';
+      const formattedDate = new Date().toISOString().split('T')[0];
+      const fileName = `mandi_khata_backup_${cleanCompName}_${formattedDate}.json`;
+      
+      const metadata = {
+        name: fileName,
+        mimeType: 'application/json',
+      };
+      
+      const fileContent = JSON.stringify(fullDatabaseState, null, 2);
+      const boundary = 'mandi_khata_boundary';
+      const delimiter = `\r\n--${boundary}\r\n`;
+      const closeDelimiter = `\r\n--${boundary}--`;
+      
+      const multipartRequestBody =
+        delimiter +
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+        JSON.stringify(metadata) +
+        delimiter +
+        'Content-Type: application/json\r\n\r\n' +
+        fileContent +
+        closeDelimiter;
+          
+      const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${gdriveToken}`,
+          'Content-Type': `multipart/related; boundary=${boundary}`,
+        },
+        body: multipartRequestBody
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Google Drive API limit/error: ${response.statusText}`);
+      }
+      
+      await response.json();
+      setBackupStatus('بیک اپ کامیابی سے اپلوڈ ہو گیا!');
+      alert('بیک اپ گوگل ڈرائیو پر کلاؤڈ بیک اپ فائل کے طور پر کامیابی سے سنکرونائز ہو گیا ہے۔ \nفائل کا نام: ' + fileName);
+      fetchGdriveBackupList();
+    } catch (error: any) {
+      console.error(error);
+      alert('گوگل ڈرائیو اپلوڈ میں ناکامی: ' + error.message);
+    } finally {
+      setIsBackingUp(false);
+      setBackupStatus('');
+    }
+  };
+
+  const restoreFromGoogleDrive = async (fileId: string, fileName: string) => {
+    if (!confirm(`کیا آپ واقعی گوگل ڈرائیو فائل "${fileName}" سے تمام لوکل کھاتہ ڈیٹا بحال کرنا چاہتے ہیں؟ اس سے حالیہ رکارڈ تبدیل ہو جائے گا۔`)) {
+      return;
+    }
+    setIsBackingUp(true);
+    setBackupStatus('گوگل ڈرائیو سے بیک اپ ڈاؤن لوڈ اور ری سٹور ہو رہا ہے...');
+    try {
+      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+        headers: { Authorization: `Bearer ${gdriveToken}` }
+      });
+      if (!response.ok) {
+        throw new Error(`Could not fetch file content: ${response.statusText}`);
+      }
+      const parsed = await response.json();
+      if (parsed && parsed.accounts) {
+        onRestoreDatabase(parsed);
+        alert('بیک اپ ڈیٹا کامیابی سے بحال (Restore) کر دیا گیا ہے۔');
+      } else {
+        alert('بیک اپ فائل میں خامی ہے۔ اسکو منڈی کھاتہ فارمیٹ میں ہونا چاہئیے۔');
+      }
+    } catch (error: any) {
+      console.error(error);
+      alert('بیک اپ بحال کرنے میں ناکامی: ' + error.message);
+    } finally {
+      setIsBackingUp(false);
+      setBackupStatus('');
+    }
+  };
+
+  const deleteGdriveFile = async (fileId: string, fileName: string) => {
+    if (!confirm(`کیا آپ گوگل ڈرائیو سے بیک اپ فائل "${fileName}" ہمیشہ کے لئے مٹانا چاہتے ہیں؟`)) {
+      return;
+    }
+    try {
+      const response = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${gdriveToken}` }
+      });
+      if (response.ok || response.status === 204) {
+        alert('بیک اپ فائل کامیابی سے حذف کر دی گئی ہے۔');
+        fetchGdriveBackupList();
+      } else {
+        alert('فائل حذف کرنے میں ناکامی۔');
+      }
+    } catch (e: any) {
+      alert('خرابی: ' + e.message);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    const CLIENT_ID = "102852475429-bk2uk7ki3zs3axfag7bwah.apps.googleusercontent.com"; // Provisioned Google Client ID
+    const redirectUri = window.location.origin + window.location.pathname;
+    const scope = "https://www.googleapis.com/auth/drive.file";
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=token&scope=${encodeURIComponent(scope)}`;
+    
+    const popup = window.open(authUrl, 'Google_Backup_OAuth', 'width=600,height=600,left=150,top=100');
+    if (!popup) {
+      alert('براہ کرم براؤزر کی سیٹنگز میں پاپ اپس (Popups) کی اجازت دیں تاکہ گوگل لاگ ان پیج کھل سکے۔');
+    }
+  };
+
+  const handleGoogleLogout = () => {
+    setGdriveToken('');
+    setGdriveFiles([]);
+    localStorage.removeItem('mm_gdrive_token');
+    alert('گوگل ڈرائیو اکاؤنٹ منقطع کر دیا گیا ہے۔');
+  };
+
   // Backup loading screens State
   const [backupStatus, setBackupStatus] = useState<string>('');
   const [isBackingUp, setIsBackingUp] = useState(false);
@@ -567,48 +766,212 @@ export default function BackupCalendarManager({
           <div className="p-6 max-w-2xl mx-auto space-y-6 text-center">
             
             <div className="space-y-2">
-              <h3 className="text-lg font-black text-stone-800">منڈی کھاتہ کلاؤڈ سیکیور بیک اپ سروس</h3>
+              <h3 className="text-xl font-black text-stone-900">منڈی کھاتہ اسمارٹ کلاؤڈ بیک اپ و ڈیٹا بحالی</h3>
               <p className="text-xs text-stone-500 max-w-md mx-auto leading-relaxed">
-                اپنے منڈی اور پیسٹی سائیڈ دکان کا پور کھاتہ جات کا بیک اپ لوکل کمپیوٹر یا گوگل ڈرائیو پر محفوظ کریں۔ کسی بھی خامی کی صورت میں سیکنڈز میں بحالی ممکن ہے۔
+                اپنے منڈی اور آڑھت اکاؤنٹ کا تمام ڈیٹا محفوظ کلاؤڈ میں سنکرونائز کریں۔ کسی بھی حادثاتی خامی یا کمپیوٹر فارمیٹ ہونے کی صورت میں سیکنڈز میں بحالی ممکن ہے۔
               </p>
             </div>
 
-            {/* Backing up state simulation screens */}
-            {isBackingUp ? (
-              <div className="bg-stone-50 border p-6 rounded-lg shadow-inner space-y-4 max-w-md mx-auto animate-pulse">
-                <span className="text-xs font-bold text-[#7BA100] block">{backupStatus}</span>
-                <div className="w-full bg-stone-200 h-2.5 rounded-full overflow-hidden">
-                  <div className="bg-[#8DB600] h-full rounded-full transition-all duration-300" style={{ width: '70%' }}></div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col sm:flex-row justify-center gap-4 py-4 max-w-md mx-auto">
-                {/* Download Backup */}
+            {/* Storage Priority Chooser Options */}
+            <div className="bg-stone-50 border border-stone-200 rounded-xl p-4 max-w-md mx-auto text-right">
+              <span className="block text-xs font-bold text-stone-700 mb-2.5">بیک اپ اسٹوریج کی ترجیح (Backup Storage Selection):</span>
+              <div className="grid grid-cols-2 gap-3">
                 <button
-                  onClick={executeBackupProcess}
-                  className="flex-1 bg-[#8DB600] text-white hover:bg-[#7BA100] py-3.5 px-4 rounded-lg font-bold text-xs flex flex-col items-center gap-1.5 shadow cursor-pointer border border-[#7BA100]"
+                  type="button"
+                  onClick={() => setBackupOption('local')}
+                  className={`p-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                    backupOption === 'local'
+                      ? 'bg-[#8DB600] text-white border-[#7BA100] shadow-md'
+                      : 'bg-white text-stone-700 hover:bg-stone-100 border-stone-200'
+                  }`}
                 >
-                  <Download className="w-6 h-6" />
-                  <span>دستی بیک اپ بنائیں (Download Backup)</span>
+                  <Download className="w-4 h-4" />
+                  <span>لوکل کمپیوٹر فائل</span>
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setBackupOption('gdrive')}
+                  className={`p-3 rounded-lg text-xs font-bold flex items-center justify-center gap-2 border transition-all cursor-pointer ${
+                    backupOption === 'gdrive'
+                      ? 'bg-[#4F46E5] text-white border-[#4F46E5] shadow-md'
+                      : 'bg-white text-stone-700 hover:bg-stone-100 border-stone-200'
+                  }`}
+                >
+                  <Database className="w-4 h-4" />
+                  <span>گوگل ڈرائیو کلاؤڈ</span>
+                </button>
+              </div>
+            </div>
 
-                {/* Restore Backup file upload trigger */}
-                <label className="flex-1 bg-stone-700 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1.5 shadow cursor-pointer relative">
-                  <Upload className="w-6 h-6" />
-                  <span>بیک اپ فائل بحال کریں (Restore)</span>
-                  <input
-                    type="file"
-                    accept=".json"
-                    onChange={handleRestoreImport}
-                    className="absolute inset-0 opacity-0 cursor-pointer"
-                  />
-                </label>
+            {/* A. LOCAL COMPUTER SELECTION segment */}
+            {backupOption === 'local' && (
+              <div className="space-y-4">
+                {isBackingUp ? (
+                  <div className="bg-stone-50 border p-6 rounded-lg shadow-inner space-y-4 max-w-md mx-auto animate-pulse">
+                    <span className="text-xs font-bold text-[#7BA100] block">{backupStatus}</span>
+                    <div className="w-full bg-stone-200 h-2.5 rounded-full overflow-hidden">
+                      <div className="bg-[#8DB600] h-full rounded-full" style={{ width: '80%' }}></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex flex-col sm:flex-row justify-center gap-4 py-4 max-w-md mx-auto">
+                    {/* Download Backup */}
+                    <button
+                      onClick={executeBackupProcess}
+                      className="flex-1 bg-[#8DB600] text-white hover:bg-[#7BA100] py-3.5 px-4 rounded-lg font-bold text-xs flex flex-col items-center gap-1.5 shadow cursor-pointer border border-[#7BA100] transition-colors"
+                    >
+                      <Download className="w-6 h-6 animate-bounce" />
+                      <span>دستی بیک اپ فائل بنائیں (Download)</span>
+                    </button>
+
+                    {/* Restore Backup file upload */}
+                    <label className="flex-1 bg-stone-700 hover:bg-stone-800 text-white py-3.5 px-4 rounded-lg font-bold text-xs flex flex-col items-center justify-center gap-1.5 shadow cursor-pointer relative transition-colors">
+                      <Upload className="w-6 h-6" />
+                      <span>لوکل فائل بحال کریں (Restore)</span>
+                      <input
+                        type="file"
+                        accept=".json"
+                        onChange={handleRestoreImport}
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                      />
+                    </label>
+                  </div>
+                )}
+                <div className="bg-[#8DB600]/5 border border-dashed border-[#8DB600]/30 rounded-lg p-3 max-w-md mx-auto text-[10px] text-stone-600 font-medium leading-relaxed text-right">
+                  <strong>آف لائن اسٹور:</strong> تمام کھاتہ جاتی ڈیٹا آپ کے موجودہ براؤزر میں آف لائن محفوظ ہے۔ فائل آف لائن ڈاؤن لوڈ کر کے اپنے کمپیوٹر کی کسی دوسری ہارڈ ڈرائیو میں محفوظ رکھنا تجویز کیا جاتا ہے۔
+                </div>
               </div>
             )}
 
-            <div className="bg-[#8DB600]/5 border-2 border-dashed border-[#8DB600]/30 rounded-lg p-2.5 max-w-md mx-auto text-[10px] text-stone-600 font-semibold leading-relaxed">
-              <strong>آٹو بیک اپ فعال ہے:</strong> سسٹم کا ڈیٹا پر امن طریقے سے آپ کے براؤزر کے لوکل آڑھت باکس میں سنکرونائز ہے۔ فائل محفوظ مقام جیسے D:\Backups یا OneDrive میں رکھیں!
-            </div>
+            {/* B. GOOGLE DRIVE SELECTION segment */}
+            {backupOption === 'gdrive' && (
+              <div className="space-y-4">
+                {!gdriveToken ? (
+                  <div className="border border-indigo-100 bg-indigo-50/50 rounded-xl p-5 max-w-md mx-auto space-y-4">
+                    <div className="space-y-1">
+                      <span className="block text-xs font-bold text-indigo-900">حفاظتی کلاؤڈ سنکرنائزیشن غیر منسلک ہے</span>
+                      <p className="text-[10.5px] text-indigo-700 leading-relaxed">
+                        اپنے ڈیٹا کو براہ راست اپنے محفوظ گوگل کھاتہ (Google Account) کے گوگل ڈرائیو اسٹوریج پر آٹو سنک اور مطابقت پذیر کرنے کیلیئے لاگ ان کریں۔
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGoogleLogin}
+                      className="w-full bg-[#4F46E5] hover:bg-[#7C3AED] text-white font-bold py-2.5 px-4 rounded-lg text-xs flex items-center justify-center gap-2 shadow-lg transition-all cursor-pointer"
+                    >
+                      {/* Beautiful G Icon representation */}
+                      <svg className="w-4 h-4 fill-current text-white" viewBox="0 0 24 24">
+                        <path d="M12.24 10.285V13.4h6.86c-.277 1.56-1.602 4.585-6.86 4.585-4.54 0-8.24-3.765-8.24-8.4s3.7-8.4 8.24-8.4c2.58 0 4.307 1.095 5.298 2.045l2.465-2.37C18.435 1.21 15.62 0 12.24 0 5.58 0 0 5.37 0 12s5.58 12 12.24 12c6.96 0 11.57-4.89 11.57-11.79 0-.795-.085-1.4-.195-1.925H12.24z"/>
+                      </svg>
+                      <span>گوگل اکاؤنٹ سے منسلک کریں (Google Login)</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Logged in settings and action button */}
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 max-w-md mx-auto flex flex-col sm:flex-row justify-between items-center gap-3 text-right">
+                      <div className="space-y-0.5">
+                        <span className="text-[10px] text-slate-400 block font-bold">منسلک شدہ گوگل کلاؤڈ کھاتہ</span>
+                        <div className="flex items-center gap-1.5 text-xs text-slate-800 font-bold justify-end">
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                          <span>گوگل ڈرائیو فعال ہے ({companyName})</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => fetchGdriveBackupList()}
+                          className="bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg text-xxs font-bold transition-all cursor-pointer"
+                        >
+                          ریش فریش لسٹ (Refresh)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleGoogleLogout}
+                          className="bg-red-50 hover:bg-red-100 text-red-650 px-3 py-1.5 rounded-lg text-xxs font-bold transition-all cursor-pointer"
+                        >
+                          منقطع کریں (Disconnect)
+                        </button>
+                      </div>
+                    </div>
+
+                    {isBackingUp ? (
+                      <div className="bg-indigo-50 border border-indigo-200 p-6 rounded-xl shadow-inner space-y-4 max-w-md mx-auto animate-pulse">
+                        <span className="text-xs font-bold text-[#4F46E5] block">{backupStatus}</span>
+                        <div className="w-full bg-[#4F46E5]/10 h-2.5 rounded-full overflow-hidden">
+                          <div className="bg-[#4F46E5] h-full rounded-full transition-all duration-300" style={{ width: '85%' }}></div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="max-w-md mx-auto">
+                        <button
+                          type="button"
+                          onClick={uploadToGoogleDrive}
+                          className="w-full bg-gradient-to-r from-[#4F46E5] to-[#7C3AED] hover:from-[#7C3AED] hover:to-[#4F46E5] text-white py-3.5 px-4 rounded-lg font-bold text-xs flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all cursor-pointer"
+                        >
+                          <Database className="w-5 h-5 text-cyan-300" />
+                          <span>گوگل ڈرائیو پر نیا بیک اپ بھیجیں (Upload Backup)</span>
+                        </button>
+                      </div>
+                    )}
+
+                    {/* Google Drive files list representing standard back ups */}
+                    <div className="max-w-md mx-auto text-right space-y-2">
+                      <span className="text-xs font-bold text-stone-700 block mt-4 border-r-4 border-indigo-600 pr-2 pb-0.5">ڈرائیو پر موجود کھاتہ بیک اپ فائلز (Drive Backups List):</span>
+                      
+                      {isLoadingGdriveFiles ? (
+                        <div className="text-center py-6 text-xs text-stone-400 font-bold animate-pulse">
+                          گوگل ڈرائیو سے فائلوں کی فہرست طلب کی جا رہی ہے...
+                        </div>
+                      ) : gdriveFiles.length === 0 ? (
+                        <div className="text-center py-6 border rounded-xl bg-stone-50 text-xs text-stone-400 font-bold border-dashed pr-2">
+                          گوگل ڈرائیو پر اس آڑھتی پروگرام کی کوئی فائل نہیں ملی۔ "نیا بیک اپ بھیجیں" پر کلک کریں۔
+                        </div>
+                      ) : (
+                        <div className="border border-stone-200 rounded-xl overflow-hidden divide-y divide-stone-100 bg-white shadow-sm max-h-[220px] overflow-y-auto">
+                          {gdriveFiles.map((file) => (
+                            <div key={file.id} className="p-3 hover:bg-slate-50/80 flex justify-between items-center gap-2">
+                              {/* File download details */}
+                              <div className="text-right space-y-1 flex-1">
+                                <span className="text-xs font-black text-stone-900 block truncate" title={file.name}>
+                                  {file.name}
+                                </span>
+                                <span className="text-[10px] text-stone-400 block font-mono">
+                                  تاریخ: {new Date(file.createdTime).toLocaleString()} | سائز: {(Number(file.size || 0) / 1024).toFixed(1)} KB
+                                </span>
+                              </div>
+                              
+                              {/* Action buttons list */}
+                              <div className="flex gap-1.5 flex-shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => restoreFromGoogleDrive(file.id, file.name)}
+                                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 px-2.5 py-1.5 rounded-lg text-xxs font-bold cursor-pointer transition-colors"
+                                  title="ڈیٹا اس فائل کے رکارڈ سے بحال کریں"
+                                >
+                                  ڈیٹا بحال کریں (Restore)
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => deleteGdriveFile(file.id, file.name)}
+                                  className="bg-red-50 hover:bg-red-100 text-red-650 p-1.5 rounded-lg text-xxs font-bold cursor-pointer transition-colors"
+                                  title="فائل مٹائیں"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="bg-indigo-50/40 border border-dashed border-indigo-200 rounded-lg p-3 max-w-md mx-auto text-[10px] text-stone-550 font-medium leading-relaxed text-right">
+                  <strong>ڈرائیو کلاؤڈ سیکیورٹی:</strong> گوگل سیکیورٹی سیٹنگز کے تحت منڈی کھاتہ صرف ان فائلوں تک رسائی حاصل کر سکتا ہے جو اس کے اپنے پینل کے ذریعے بنائی گئی ہوں۔ باقی ہوم فائلوں تک یہ بالکل رسائی حاصل نہیں کر سکتا۔
+                </div>
+              </div>
+            )}
 
           </div>
         )}

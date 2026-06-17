@@ -7,6 +7,7 @@ import ReceiptPaymentManager from './components/ReceiptPaymentManager';
 import LedgerViewer from './components/LedgerViewer';
 import ReportsViewer from './components/ReportsViewer';
 import BackupCalendarManager from './components/BackupCalendarManager';
+import FloatingAdsSlider from './components/FloatingAdsSlider';
 
 import { Account, MarketInvoice, PurchaseInvoice, CollectionReceipt, PaymentVoucher, ExpenseRecord, JournalEntry, PromiseReminder, UserRole } from './types';
 import { 
@@ -2389,6 +2390,7 @@ export default function App() {
           </div>
         </div>
       )}
+      <FloatingAdsSlider />
     </div>
   );
 }
