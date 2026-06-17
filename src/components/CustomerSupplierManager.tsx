@@ -196,7 +196,7 @@ export default function CustomerSupplierManager({
         {/* Dynamic Entry Form Panel (Overlay popup / Side panel style) */}
         {showForm && (
           <div className="fixed inset-0 bg-stone-900/50 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-lg border-2 border-[#7BA100] w-full max-w-lg overflow-hidden shadow-2xl text-right">
+            <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-lg overflow-hidden shadow-2xl text-right">
               <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center">
                 <span className="font-bold text-sm">
                   {isEditMode ? 'تدوین کھاتہ فرم' : 'نیا کھاتہ مندرجہ فرم'}

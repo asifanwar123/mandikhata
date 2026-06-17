@@ -99,8 +99,8 @@ export default function Header({
         <div className="flex items-center gap-3 text-left">
           <div className="text-stone-900 text-xs flex flex-row items-center gap-2 text-left font-sans">
             <span 
-              style={{ fontSize: '23px', lineHeight: '23px', paddingLeft: '10px' }}
-              className="font-sans font-bold text-stone-950 tracking-tight text-left"
+              style={{ fontSize: '23px', lineHeight: '23px', paddingLeft: '0px', paddingBottom: '0px', marginBottom: '0px', marginTop: '60px', borderWidth: '0px', borderStyle: 'groove', borderRadius: '0px', color: '#097a09' }}
+              className="font-sans font-bold tracking-tight text-left"
             >
               {formattedDate}
             </span>
