@@ -1103,22 +1103,18 @@ export default function App() {
 
             {/* Application Logo & Head Title */}
             <div className="space-y-4 relative z-10">
-              <div className="flex items-center gap-3">
+              <div className="flex justify-center">
                 <img 
                   src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzeDsAtCYGFKat6XlJLYjtDu8NG1T5Iha4xdptJP_gWWEUcbluAdLpjXR3-XD3usEeMKl7xWmGujm-kYfoW7ryp_iJnn94QsHGrUkGL7OrMsXaRH4mBhpMAKbRU6Qvlegj2xRYyhJCu7qlukIm-bOr8VQ2cn-4VGovUcAYJrjn13KbcCWZ-ZjMHEuD1Ts/s1600/Mandi_khata-Logo.png" 
                   alt="منڈی کھاتہ لوگو" 
                   referrerPolicy="no-referrer"
-                  className="w-16 h-16 object-contain drop-shadow" 
+                  className="w-24 h-24 object-contain drop-shadow" 
                 />
-                <div>
-                  <h1 className="text-2xl font-black tracking-tight leading-none text-stone-900 font-sans">منڈی کھاتہ</h1>
-                  <span className="text-[9px] text-stone-700 tracking-widest block font-sans">MANDI KHATA ERP</span>
-                </div>
               </div>
 
-              <div className="space-y-2 pt-4">
+              <div className="space-y-2 pt-4 text-center">
                 <h2 className="text-xl md:text-2xl font-black leading-tight text-stone-900">سبزی و فروٹ منڈی ڈیجیٹل کلاؤڈ سسٹم</h2>
-                <div className="h-1.5 w-16 bg-stone-900/30 rounded-full"></div>
+                <div className="h-1.5 w-16 bg-stone-900/30 rounded-full mx-auto"></div>
               </div>
             </div>
 
@@ -1131,7 +1127,7 @@ export default function App() {
 
             {/* Dev Hotline bar */}
             <div className="relative z-10 text-xs text-stone-700 font-sans border-t border-stone-900/10 pt-4 flex justify-between items-center text-[10.5px]">
-              <span>ڈویلپر ہاٹ لائن: 03008885072 | 03026834300</span>
+              <span className="text-[15.5px] leading-[15px]">ڈویلپر ہاٹ لائن: 03008885072 | 03026834300</span>
               <span className="font-mono bg-stone-900/10 text-stone-900 px-2 py-0.5 rounded text-[9.5px]">v1.12 SaaS</span>
             </div>
           </div>
