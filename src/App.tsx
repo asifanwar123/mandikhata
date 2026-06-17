@@ -1095,7 +1095,7 @@ export default function App() {
         <div className="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all border border-stone-200 min-h-[500px]">
           
           {/* LEFT AREA: Modern Brand Profile (No English, purely Urdu details) */}
-          <div className="w-full md:w-1/2 p-6 md:p-10 text-white flex flex-col justify-between relative bg-gradient-to-br from-[#123e7f] via-[#2563EB] to-[#1E40AF] overflow-hidden min-h-[250px] md:min-h-auto">
+          <div className="w-full md:w-1/2 p-6 md:p-10 text-stone-900 flex flex-col justify-between relative bg-[#0fe6fa] overflow-hidden min-h-[250px] md:min-h-auto">
             {/* Visual ambient curves pattern mimicking the image */}
             <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
             <div className="absolute bottom-[-10%] right-[-10%] w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
@@ -1111,28 +1111,28 @@ export default function App() {
                   className="w-16 h-16 object-contain drop-shadow" 
                 />
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight leading-none text-white font-sans">منڈی کھاتہ</h1>
-                  <span className="text-[9px] opacity-80 tracking-widest block font-sans">MANDI KHATA ERP</span>
+                  <h1 className="text-2xl font-black tracking-tight leading-none text-stone-900 font-sans">منڈی کھاتہ</h1>
+                  <span className="text-[9px] text-stone-700 tracking-widest block font-sans">MANDI KHATA ERP</span>
                 </div>
               </div>
 
               <div className="space-y-2 pt-4">
-                <h2 className="text-xl md:text-2xl font-black leading-tight text-amber-300">سبزی و فروٹ منڈی ڈیجیٹل کلاؤڈ سسٹم</h2>
-                <div className="h-1.5 w-16 bg-amber-400 rounded-full"></div>
+                <h2 className="text-xl md:text-2xl font-black leading-tight text-stone-900">سبزی و فروٹ منڈی ڈیجیٹل کلاؤڈ سسٹم</h2>
+                <div className="h-1.5 w-16 bg-stone-900/30 rounded-full"></div>
               </div>
             </div>
 
             {/* Application Arabic/Urdu description paragraph */}
             <div className="relative z-10 pt-4 md:pt-0">
-              <p className="text-xs md:text-sm font-light leading-relaxed opacity-95 text-justify">
+              <p className="text-xs md:text-sm font-light leading-relaxed text-justify">
                 منڈی کھاتہ پاکستان بھر کی غلہ و سبزی منڈیوں کے لیے تیار کردہ سب سے مقبول اور محفوظ خودکار اکاؤنٹنگ پروگرام ہے۔ یہ آپ کو گاہکوں اور سپلائرز کے کھاتے، روزنامچہ، یومیہ فروخت کا کمیشن، پلے داری، مزدوری کی کٹوتیاں، اور کیش ان ہینڈ رپورٹس انگلیوں کے اشارے پر فراہم کرتا ہے۔ اب اپنے منڈی کاروبار کو روایتی کاغذ سے ڈیجیٹل کلاؤڈ پر منتقل کریں۔
               </p>
             </div>
 
             {/* Dev Hotline bar */}
-            <div className="relative z-10 text-xs text-amber-200 font-sans border-t border-white/20 pt-4 flex justify-between items-center text-[10.5px]">
+            <div className="relative z-10 text-xs text-stone-700 font-sans border-t border-stone-900/10 pt-4 flex justify-between items-center text-[10.5px]">
               <span>ڈویلپر ہاٹ لائن: 03008885072 | 03026834300</span>
-              <span className="font-mono bg-white/15 px-2 py-0.5 rounded text-[9.5px]">v1.12 SaaS</span>
+              <span className="font-mono bg-stone-900/10 text-stone-900 px-2 py-0.5 rounded text-[9.5px]">v1.12 SaaS</span>
             </div>
           </div>
 
@@ -1204,7 +1204,7 @@ export default function App() {
                 {/* Submit button following the design block */}
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-blue-600 to-[#123e7f] hover:from-blue-700 hover:to-[#0f3266] text-white py-3 rounded-xl font-bold transition-all shadow-md text-xs active:scale-[0.99] cursor-pointer mt-4"
+                  className="w-full bg-[#0fe6fa] hover:bg-[#0dd4e8] text-stone-900 py-3 rounded-xl font-bold transition-all shadow-md text-xs active:scale-[0.99] cursor-pointer mt-4"
                 >
                   اپنے کلاؤڈ کھاتہ میں داخل ہوں
                 </button>
