@@ -1162,10 +1162,10 @@ export default function App() {
                       placeholder="اپنا صارف نام درج کریں..."
                       value={enteredUsername}
                       onChange={(e) => setEnteredUsername(e.target.value)}
-                      className="w-full p-3 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-sans text-stone-800"
+                      className="w-full p-3 pr-12 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-sans text-stone-800"
                       required
                     />
-                    <User className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <User className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
                   </div>
                 </div>
 
@@ -1177,16 +1177,17 @@ export default function App() {
                       placeholder="سیکورٹی پن کوڈ درج کریں..."
                       value={enteredPassword}
                       onChange={(e) => setEnteredPassword(e.target.value)}
-                      className="w-full p-3 pl-14 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-mono text-stone-900"
+                      className="w-full p-3 pl-14 pr-12 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-mono text-stone-900"
                       required
                     />
-                    {/* The SHOW/HIDE toggle perfectly replicated from the Sign In mockup image! */}
+                    {/* The SHOW/HIDE toggle perfectly replicated with icons! */}
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 hover:text-blue-800"
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-[#0fe6fa] transition-colors cursor-pointer"
+                      title={showPassword ? "چھپائیں" : "دکھائیں"}
                     >
-                      {showPassword ? 'چھپائیں' : 'دکھائیں'}
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                     <Key className="w-4 h-4 ml-0 pl-0 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
                   </div>
@@ -1204,7 +1205,7 @@ export default function App() {
                 {/* Submit button following the design block */}
                 <button
                   type="submit"
-                  className="w-full bg-[#0fe6fa] hover:bg-[#0dd4e8] text-stone-900 py-3 rounded-xl font-bold transition-all shadow-md text-xs active:scale-[0.99] cursor-pointer mt-4"
+                  className="w-[200px] h-[59px] mr-[10px] mt-[23px] pt-[16px] pb-[16px] pr-[10px] pl-0 text-center text-[19px] leading-[24px] bg-[#0fe6fa] hover:bg-[#0dd4e8] text-stone-900 rounded-xl font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer"
                 >
                   اپنے کلاؤڈ کھاتہ میں داخل ہوں
                 </button>
