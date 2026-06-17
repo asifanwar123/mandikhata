@@ -533,11 +533,11 @@ export default function App() {
   if (currentTab === 'exit') {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-[#E5E5E5] text-right font-sans p-4">
-        <div className="bg-white rounded-lg border-4 border-[#7BA100] w-full max-w-sm overflow-hidden shadow-2xl">
+        <div className="bg-white rounded-lg border-4 border-[#7BA100] w-full max-w-[290px] overflow-hidden shadow-2xl">
           <div className="bg-[#8DB600] text-white p-4 flex flex-col items-center gap-1">
             <Lock className="w-12 h-12 text-white" />
-            <span className="text-lg font-black tracking-tight mt-1">کیا آپ سسٹم لاک کرنا چاہتے ہیں؟</span>
-            <span className="text-[10px] opacity-85">دوبارہ لاگ ان کیلئے پاس کوڈ درکار ہو گا۔</span>
+            <span className="text-base font-black tracking-tight mt-1 text-center">کیا آپ سسٹم لاک کرنا چاہتے ہیں؟</span>
+            <span className="text-[10px] opacity-85 text-center">دوبارہ لاگ ان کیلئے پاس کوڈ درکار ہو گا۔</span>
           </div>
           <div className="p-4 flex gap-2">
             <button
@@ -547,13 +547,14 @@ export default function App() {
                 setPinCode('');
                 setCurrentTab('dashboard');
               }}
-              className="flex-1 bg-red-650 hover:bg-red-700 text-white font-bold text-xs py-2 rounded-md cursor-pointer text-center"
+              style={{ color: '#ffffff' }}
+              className="flex-1 bg-red-700 hover:bg-red-800 text-white font-black text-xs py-2.5 rounded-md cursor-pointer flex items-center justify-center text-center shadow-md transition-colors"
             >
               ہاں، لاک کریں
             </button>
             <button
               onClick={() => setCurrentTab('dashboard')}
-              className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold text-xs py-2 rounded-md border text-center cursor-pointer"
+              className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-900 font-black text-xs py-2.5 rounded-md border border-stone-450 text-center cursor-pointer flex items-center justify-center shadow-md transition-colors"
             >
               کینسل
             </button>
@@ -1160,6 +1161,7 @@ export default function App() {
                       onChange={(e) => setEnteredUsername(e.target.value)}
                       className="w-full p-3 pr-12 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-sans text-stone-800"
                       required
+                      autoFocus
                     />
                     <User className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
                   </div>
@@ -1662,22 +1664,6 @@ export default function App() {
           <span className="flex items-center gap-1.5">
             <span style={{ fontSize: '15px' }} className="font-sans font-bold text-stone-800">ڈویلپر فون :</span>
             <span style={{ fontSize: '13px' }} className="font-sans font-medium">03026834300 | 03008885072</span>
-          </span>
-
-          <span className="flex items-center gap-1.5 sm:border-r sm:border-stone-200 sm:pr-4">
-            <span style={{ fontSize: '13px' }} className="font-sans font-bold text-stone-800">صلاحیت (Admin Role):</span>
-            <select 
-              value={currentUserRole}
-              onChange={(e) => setCurrentUserRole(e.target.value as any)}
-              style={{ fontSize: '11px' }}
-              className="bg-stone-50 border border-stone-300 font-sans font-bold text-stone-900 cursor-pointer rounded px-1.5 py-0 h-6 focus:outline-none"
-            >
-              <option value="Admin">ایڈمن</option>
-              <option value="Manager">مینیجر</option>
-              <option value="Operator">آپریٹر</option>
-              <option value="Accountant">اکاؤنٹنٹ</option>
-              <option value="Read Only">صرف پڑھنے کیلئے</option>
-            </select>
           </span>
         </div>
         

@@ -56,11 +56,11 @@ export default function Dashboard({ onTileClick, stats }: DashboardProps) {
               onClick={() => onTileClick(tile.id)}
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.98 }}
-              className="bg-white border border-stone-250/80 rounded-none p-4 hover:border-[#8DB600] hover:shadow-md transition-all cursor-pointer relative group flex flex-col justify-between min-h-[125px]"
+              className="bg-white border border-stone-250/80 rounded-xl p-4 hover:border-[#8DB600] hover:shadow-md transition-all cursor-pointer relative group flex flex-col justify-between min-h-[125px] overflow-hidden"
             >
               {/* Tile Header */}
               <div className="flex justify-between items-start">
-                <span className="text-[#8DB600] group-hover:text-white group-hover:bg-[#8DB600] font-serif font-bold text-[10px] tracking-wider bg-[#8DB600]/10 px-2 py-0.5 rounded-none transition-colors display-serif">
+                <span className="text-[#8DB600] group-hover:text-white group-hover:bg-[#8DB600] font-serif font-bold text-[10px] tracking-wider bg-[#8DB600]/10 px-2 py-0.5 rounded-md transition-colors display-serif">
                   {tile.num}
                 </span>
                 <IconComponent className="w-4 h-4 text-stone-400 group-hover:text-[#8DB600] transition-colors" />
@@ -84,7 +84,7 @@ export default function Dashboard({ onTileClick, stats }: DashboardProps) {
       </div>
 
       {/* Stats Summary Panel footer replicating the screenshot live state */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 bg-white p-5 rounded-none border border-stone-250 shadow-xs text-right divide-x divide-x-reverse divide-y md:divide-y-0 divide-stone-200/60">
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 bg-white p-5 rounded-xl border border-stone-250 shadow-xs text-right divide-x divide-x-reverse divide-y md:divide-y-0 divide-stone-200/60">
         <div className="pl-4 pb-2 md:pb-0">
           <span className="text-[10px] text-stone-500 block font-semibold leading-none mb-1">کل نقدی بقایا d10001</span>
           <span className="text-xl font-bold text-emerald-700 font-mono display-serif">
