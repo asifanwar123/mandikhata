@@ -1,7 +1,29 @@
 import React, { useState } from 'react';
 import { PromiseReminder, BusinessCard } from '../types';
 import { INITIAL_CARDS } from '../utils/initialData';
-import { Calendar, CheckSquare, Square, Download, Upload, Search, Share2, PhoneCall, Settings, Globe, Palette, Coins, HelpCircle, ShieldAlert, Lock, Unlock, Mail, FileText, Percent, ArrowLeft, Plus, Trash2 } from 'lucide-react';
+import { Calendar, CheckSquare, Square, Download, Upload, Search, Share2, PhoneCall, Settings, Globe, Palette, Coins, HelpCircle, ShieldAlert, Lock, Unlock, Mail, FileText, Percent, ArrowLeft, Plus, Trash2, Terminal, Database } from 'lucide-react';
+
+export interface RegisteredCompany {
+  companyId: string;
+  companyName: string;
+  businessType: string;
+  logoUrl?: string;
+  address: string;
+  city: string;
+  country: string;
+  ownerName: string;
+  ownerPhone: string;
+  emailAddress: string;
+  cnicTax?: string;
+  username: string;
+  passwordConfirm: string;
+  subscriptionCode: string;
+  subscriptionPlan: string;
+  preferredLanguage: string;
+  preferredCurrency: string;
+  status: 'trial' | 'active' | 'expired';
+  createdAt: string;
+}
 
 interface BackupCalendarManagerProps {
   reminders: PromiseReminder[];
@@ -28,7 +50,84 @@ interface BackupCalendarManagerProps {
   setCurrencySymbol: (v: string) => void;
   taxRate: number;
   setTaxRate: (v: number) => void;
+
+  currentTenantId?: string;
+  tenants?: RegisteredCompany[];
+  onUpdateTenantProfile?: (updatedTenant: RegisteredCompany) => void;
 }
+
+const SAAS_STRUCTURE_CODE = `mandi-khata-saas-core/
+├── prisma/                 # ORM schema models
+│   └── schema.prisma       # Tenant and Ledger relation models
+├── src/
+│   ├── app/                # Next.js App Router UI
+│   │   ├── (auth)/         # Login, Registration pages
+│   │   ├── (dashboard)/    # Dynamic Tenant Dashboard
+│   │   └── api/            # API Router proxy endpoints
+│   ├── components/         # Shared UI Widgets (Bibi, Roznamcha)
+│   ├── hooks/              # Custom Syncing & offline hooks
+│   ├── lib/                # db client details, utils
+│   └── middleware.ts       # Tenant sub-domain routing middleware
+├── package.json
+└── tailwind.config.ts`;
+
+const SAAS_SQL_SCHEMA = `CREATE TYPE business_type_enum AS ENUM (
+  'Sabzi Mandi Commission Agent', 
+  'Wholesaler', 
+  'Retailer', 
+  'Trader'
+);
+
+CREATE TABLE tenants (
+  id VARCHAR(50) PRIMARY KEY,
+  company_name VARCHAR(255) NOT NULL,
+  business_type business_type_enum NOT NULL,
+  registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  owner_name VARCHAR(150),
+  owner_phone VARCHAR(50) NOT NULL,
+  security_pin VARCHAR(255) NOT NULL,
+  expiry_date DATE NOT NULL,
+  subscription_code VARCHAR(30) UNIQUE NOT NULL,
+  status VARCHAR(20) DEFAULT 'Active',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  tenant_id VARCHAR(50) REFERENCES tenants(id) ON DELETE CASCADE,
+  username VARCHAR(100) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role_type VARCHAR(30) DEFAULT 'Staff',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(tenant_id, username)
+);`;
+
+const SAAS_JWT_CODE = `import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+
+export const generateToken = (payload: { userId: number; tenantId: string }) => {
+  return jwt.sign(payload, process.env.JWT_SECRET || 'secret123', { expiresIn: '30d' });
+};
+
+export const authenticateTenant = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'منسوخ رسائی! ٹوکن غائب ہے۔' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123') as { userId: number; tenantId: string };
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'غیر معتبر سیشن ٹوکن!' });
+  }
+};`;
+
+const SAAS_ADMIN_PROMPT = `Act as an expert frontend engineer. Generate a high-fidelity Super Admin control panel dashboard for the "Mandi Khata" Sabzi Mandi multi-tenant SaaS application.
+The Dashboard must contain widgets for total system active tenants, active subscription counts, monthly revenue collections, custom database telemetry cards, tenant list containing columns (Owner name, license state, expiry date, ban/active trigger widgets, billing logs).
+Include a custom master verification widget for generating new 12-digit license keys for active payment confirmation. Use Tailwind CSS with beautiful dark emerald background colors.`;
 
 export default function BackupCalendarManager({
   reminders,
@@ -53,14 +152,17 @@ export default function BackupCalendarManager({
   currencySymbol,
   setCurrencySymbol,
   taxRate,
-  setTaxRate
+  setTaxRate,
+  currentTenantId = '',
+  tenants = [],
+  onUpdateTenantProfile
 }: BackupCalendarManagerProps) {
   
   // Tab selector
   const [activeTab, setActiveTab] = useState<'calendar' | 'cards' | 'backup' | 'shop_detail' | 'settings'>('shop_detail');
 
   // Settings Panel States
-  const [currentSettingPage, setCurrentSettingPage] = useState<'new_company' | 'exist_company' | 'software_setup' | 'help'>('exist_company');
+  const [currentSettingPage, setCurrentSettingPage] = useState<'new_company' | 'exist_company' | 'software_setup' | 'help' | 'saas_info'>('exist_company');
   const [securityPin, setSecurityPin] = useState('');
   const [isPinCorrect, setIsPinCorrect] = useState(false);
   const [pinError, setPinError] = useState('');
@@ -77,6 +179,40 @@ export default function BackupCalendarManager({
   const [editCompanyAddress, setEditCompanyAddress] = useState(companyAddress);
   const [editCompanyPhone, setEditCompanyPhone] = useState(companyPhone);
   const [editCompanyKhataYear, setEditCompanyKhataYear] = useState(companyKhataYear);
+
+  const activeTenant = tenants.find(t => t.companyId === currentTenantId);
+
+  // SaaS integrated profiles states
+  const [editBusinessType, setEditBusinessType] = useState(activeTenant?.businessType || 'Sabzi Mandi Commission Agent');
+  const [editCity, setEditCity] = useState(activeTenant?.city || '');
+  const [editCountry, setEditCountry] = useState(activeTenant?.country || 'پاکستان');
+  const [editOwnerName, setEditOwnerName] = useState(activeTenant?.ownerName || '');
+  const [editOwnerPhone, setEditOwnerPhone] = useState(activeTenant?.ownerPhone || '');
+  const [editEmailAddress, setEditEmailAddress] = useState(activeTenant?.emailAddress || '');
+  const [editCnicTax, setEditCnicTax] = useState(activeTenant?.cnicTax || '');
+  const [editUsername, setEditUsername] = useState(activeTenant?.username || '');
+  const [editPasswordConfirm, setEditPasswordConfirm] = useState(activeTenant?.passwordConfirm || '');
+
+  React.useEffect(() => {
+    if (activeTenant) {
+      setEditBusinessType(activeTenant.businessType);
+      setEditCity(activeTenant.city);
+      setEditCountry(activeTenant.country);
+      setEditOwnerName(activeTenant.ownerName);
+      setEditOwnerPhone(activeTenant.ownerPhone);
+      setEditEmailAddress(activeTenant.emailAddress || '');
+      setEditCnicTax(activeTenant.cnicTax || '');
+      setEditUsername(activeTenant.username || '');
+      setEditPasswordConfirm(activeTenant.passwordConfirm || '');
+    }
+  }, [activeTenant]);
+
+  React.useEffect(() => {
+    setEditCompanyName(companyName);
+    setEditCompanyAddress(companyAddress);
+    setEditCompanyPhone(companyPhone);
+    setEditCompanyKhataYear(companyKhataYear);
+  }, [companyName, companyAddress, companyPhone, companyKhataYear]);
 
   // Appearance - Dynamic languages
   const [addedLanguages, setAddedLanguages] = useState<string[]>(() => {
@@ -146,7 +282,9 @@ export default function BackupCalendarManager({
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(fullDatabaseState, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", `Mandi_Khata_Backup_${new Date().toISOString().split('T')[0]}.json`);
+        const cleanCompName = companyName ? companyName.trim().replace(/\s+/g, '_') : 'MandiKhata';
+        const formattedDate = new Date().toISOString().split('T')[0];
+        downloadAnchor.setAttribute("download", `companyregistration_${cleanCompName}_${formattedDate}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
@@ -563,21 +701,6 @@ export default function BackupCalendarManager({
               <span className="font-bold text-xs text-stone-500 uppercase tracking-widest block mb-2 border-b pb-1 text-center font-sans text-stone-600">ترجیحات مینو (Settings Menu)</span>
               
               <button
-                onClick={() => setCurrentSettingPage('new_company')}
-                className={`w-full text-right px-4 py-2.5 rounded text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${
-                  currentSettingPage === 'new_company' ? 'bg-[#8DB600] text-white border-[#7BA100] shadow' : 'bg-white hover:bg-stone-100 text-stone-700 border-stone-200'
-                }`}
-              >
-                <div className="flex items-center gap-1.5">
-                  <div className={`p-1 rounded ${currentSettingPage === 'new_company' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600'}`}>
-                    <Lock className="w-3 h-3" />
-                  </div>
-                  <span>نیا ادارہ قائم کریں (New Setup)</span>
-                </div>
-                {!isPinCorrect && <span className="bg-rose-100 text-rose-800 text-[9px] px-1.5 py-0.5 rounded-full font-black font-sans">PIN</span>}
-              </button>
-
-              <button
                 onClick={() => setCurrentSettingPage('exist_company')}
                 className={`w-full text-right px-4 py-2.5 rounded text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${
                   currentSettingPage === 'exist_company' ? 'bg-[#8DB600] text-white border-[#7BA100] shadow' : 'bg-white hover:bg-stone-100 text-stone-700 border-stone-200'
@@ -617,6 +740,21 @@ export default function BackupCalendarManager({
                   </div>
                   <span>رابطہ، مدد و لکنس (Help & Trial)</span>
                 </div>
+              </button>
+
+              <button
+                onClick={() => setCurrentSettingPage('saas_info')}
+                className={`w-full text-right px-4 py-2.5 rounded text-xs font-bold transition-all flex items-center justify-between border cursor-pointer ${
+                  currentSettingPage === 'saas_info' ? 'bg-[#8DB600] text-white border-[#7BA100] shadow' : 'bg-white hover:bg-stone-100 text-stone-700 border-stone-200'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className={`p-1 rounded ${currentSettingPage === 'saas_info' ? 'bg-white/20 text-white' : 'bg-stone-100 text-stone-600'}`}>
+                    <Terminal className="w-3 h-3" />
+                  </div>
+                  <span>ساس کلاؤڈ ڈیولپر ڈیٹا (SaaS Dev Suite)</span>
+                </div>
+                <span className="bg-[#8DB600]/10 text-[#8DB600] text-[9px] px-1.5 py-0.5 rounded font-black font-sans">SDK</span>
               </button>
 
               <button
@@ -833,10 +971,10 @@ export default function BackupCalendarManager({
               {currentSettingPage === 'exist_company' && (
                 <div className="space-y-4">
                   <div className="border-b pb-2 flex items-center justify-between">
-                    <span className="text-stone-400 text-xs font-mono">Profile Details</span>
+                    <span className="text-stone-400 text-xs font-mono">SaaS Profile Integration</span>
                     <h3 className="text-lg font-black text-stone-900 flex items-center gap-2">
                       <FileText className="w-5 h-5 text-stone-600" />
-                      موجودہ ادارے کے کوائف تبدیل کریں (Existing Company Profile Detail)
+                      موجودہ کمپنی پروفائل تبدیل کریں (SaaS Profile & Company Settings)
                     </h3>
                   </div>
 
@@ -844,17 +982,43 @@ export default function BackupCalendarManager({
                     onSubmit={(e) => {
                       e.preventDefault();
                       setCompanyName(editCompanyName);
-                      setCompanyAddress(editCompanyAddress);
-                      setCompanyPhone(editCompanyPhone);
+                      setCompanyAddress(editCompanyAddress + (editCity ? '، ' + editCity : ''));
+                      setCompanyPhone(editOwnerPhone);
                       setCompanyKhataYear(editCompanyKhataYear);
-                      alert('کامیابی! تبدیلیاں محفوظ کر لی گئی ہیں اور سیشن ریفریش ہو چکا ہے۔');
+
+                      if (currentTenantId && onUpdateTenantProfile && activeTenant) {
+                        const updated: RegisteredCompany = {
+                          ...activeTenant,
+                          companyName: editCompanyName,
+                          businessType: editBusinessType,
+                          address: editCompanyAddress,
+                          city: editCity,
+                          country: editCountry,
+                          ownerName: editOwnerName,
+                          ownerPhone: editOwnerPhone,
+                          emailAddress: editEmailAddress,
+                          cnicTax: editCnicTax,
+                          username: editUsername,
+                          passwordConfirm: editPasswordConfirm
+                        };
+                        onUpdateTenantProfile(updated);
+                      }
+                      alert('کامیابی! کمپنی پروفائل تبدیلیاں کلاؤڈ ساس ڈیٹا بیس میں محفوظ اور سنکرونائز ہو گئی ہیں!');
                     }}
-                    className="bg-white p-5 border rounded-lg space-y-4 text-xs font-semibold text-stone-800"
+                    className="bg-white p-5 border rounded-lg space-y-4 text-xs font-semibold text-stone-850 text-right"
                   >
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {currentTenantId && (
+                      <div className="bg-emerald-50 rounded-lg p-3 text-emerald-800 flex justify-between items-center text-[11px]">
+                        <span>منسوب کمپنی آئی ڈی: <strong className="font-mono">{currentTenantId}</strong></span>
+                        <span>سبسکرپشن لائسنس: <strong className="font-mono text-amber-850 bg-white px-2 py-0.5 rounded border border-amber-200">{activeTenant?.subscriptionCode}</strong></span>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-stone-700">
                       
+                      {/* Box 1: Business details */}
                       <div className="space-y-1">
-                        <label className="block text-stone-600 font-bold">ادارے کا نام (Business Name):</label>
+                        <label className="block text-stone-600 font-bold">کمپنی / آڑھت کا نام * :</label>
                         <input
                           type="text"
                           value={editCompanyName}
@@ -865,7 +1029,22 @@ export default function BackupCalendarManager({
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-stone-600 font-bold">کھاتہ دار سال (Khata Year):</label>
+                        <label className="block text-stone-600 font-bold">کاروبار کی قسم :</label>
+                        <select 
+                          value={editBusinessType}
+                          onChange={(e) => setEditBusinessType(e.target.value)}
+                          className="w-full p-2 border rounded-md text-xs bg-white outline-none focus:border-[#8DB600]"
+                        >
+                          <option value="Sabzi Mandi Commission Agent">سبزی منڈی کمیشن ایجنٹ</option>
+                          <option value="Wholesaler">تھوک فروش / ہول سیلر</option>
+                          <option value="Retailer">پرچون فروش / ریٹیلر</option>
+                          <option value="Trader">آڑھتی / تاجر</option>
+                          <option value="Other">دیگر مربوط قسم</option>
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-stone-600 font-bold">کھاتہ دار سال * :</label>
                         <input
                           type="text"
                           value={editCompanyKhataYear}
@@ -875,40 +1054,108 @@ export default function BackupCalendarManager({
                         />
                       </div>
 
+                      <div className="space-y-1">
+                        <label className="block text-stone-600 font-bold">مالک کا نام * :</label>
+                        <input
+                          type="text"
+                          value={editOwnerName}
+                          onChange={(e) => setEditOwnerName(e.target.value)}
+                          className="w-full p-2 border rounded-md text-xs font-bold outline-none focus:border-[#8DB600]"
+                          required
+                        />
+                      </div>
+
                       <div className="space-y-1 md:col-span-2">
-                        <label className="block text-stone-600 font-bold">منڈی دکان کا پتہ (Shop Address):</label>
+                        <label className="block text-stone-600 font-bold">منڈی دکان کا پتہ (Street/Shop Address) * :</label>
                         <input
                           type="text"
                           value={editCompanyAddress}
                           onChange={(e) => setEditCompanyAddress(e.target.value)}
-                          className="w-full p-2 border rounded-md text-xs font-semibold outline-none focus:border-[#8DB600]"
+                          className="w-full p-2 border rounded-md text-xs font-medium outline-none focus:border-[#8DB600]"
                           required
                         />
                       </div>
 
+                      <div className="grid grid-cols-2 gap-2 md:col-span-2">
+                        <div className="space-y-1">
+                          <label className="block text-stone-600 font-bold">شہر / منڈی ٹاؤن :</label>
+                          <input
+                            type="text"
+                            value={editCity}
+                            onChange={(e) => setEditCity(e.target.value)}
+                            className="w-full p-2 border rounded-md text-xs outline-none focus:border-[#8DB600]"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block text-stone-600 font-bold">ملک :</label>
+                          <input
+                            type="text"
+                            value={editCountry}
+                            onChange={(e) => setEditCountry(e.target.value)}
+                            className="w-full p-2 border rounded-md text-xs outline-none focus:border-[#8DB600]"
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-1">
-                        <label className="block text-stone-600 font-bold">موبائل اور ہیلپ لائن (Contact Numbers):</label>
+                        <label className="block text-stone-600 font-bold">موبائل نمبر / واٹس ایپ (Mobile / WhatsApp No) * :</label>
                         <input
                           type="text"
-                          value={editCompanyPhone}
-                          onChange={(e) => setEditCompanyPhone(e.target.value)}
-                          className="w-full p-2 border rounded-md text-xs font-mono outline-none focus:border-[#8DB600]"
+                          value={editOwnerPhone}
+                          onChange={(e) => setEditOwnerPhone(e.target.value)}
+                          className="w-full p-2 border rounded-md text-xs font-mono text-left outline-none focus:border-[#8DB600]"
                           required
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <label className="block text-stone-600 font-bold">لوگو برانڈ امیج بریف (Brand Logo Setup):</label>
-                        <select className="w-full p-2 border rounded-md text-xs bg-white outline-none">
-                          <option>سبزی و فروٹ منڈی کلاسک سگنیچر (Default Vegetable Logo)</option>
-                          <option>سپلائر ممتاز حسین آڑھتی مارکہ</option>
-                        </select>
+                        <label className="block text-stone-600 font-bold">ای میل ایڈریس * :</label>
+                        <input
+                          type="email"
+                          value={editEmailAddress}
+                          onChange={(e) => setEditEmailAddress(e.target.value)}
+                          className="w-full p-2 border rounded-md text-xs font-mono text-left outline-none focus:border-[#8DB600]"
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-stone-600 font-bold">شناختی کارڈ یا ٹیکس نمبر (CNIC / Tax No) :</label>
+                        <input
+                          type="text"
+                          value={editCnicTax}
+                          onChange={(e) => setEditCnicTax(e.target.value)}
+                          className="w-full p-2 border rounded-md text-xs font-mono outline-none focus:border-[#8DB600]"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="block text-stone-600 font-bold">لاگ ان یوزرنیم :</label>
+                          <input
+                            type="text"
+                            value={editUsername}
+                            onChange={(e) => setEditUsername(e.target.value)}
+                            className="w-full p-2 border rounded-md text-xs font-mono text-left outline-none focus:border-[#8DB600]"
+                            required
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="block text-stone-600 font-bold">پاس ورڈ (پاس کوڈ) :</label>
+                          <input
+                            type="text"
+                            value={editPasswordConfirm}
+                            onChange={(e) => setEditPasswordConfirm(e.target.value)}
+                            className="w-full p-2 border rounded-md text-xs font-mono text-left outline-none focus:border-[#8DB600]"
+                            required
+                          />
+                        </div>
                       </div>
 
                     </div>
 
                     <div className="bg-stone-50 p-3 rounded border text-[11px] text-stone-500 leading-normal">
-                      بریف: یہ معلومات اور توسیعی ترتیبات تبدیل کرنے سے اوپری مین ہیڈرز، بلز، رپورٹز، اور دکان کی عام تفصیلات فوری طور پر اپڈیٹ ہو جائیں گی۔ یہ عمل مکمل طور پر آف لائن اور لائیو کام کرتا ہے۔
+                      بریف: یہاں کی جانے والی تمام تر تبدیلیاں کلاؤڈ اور لوکل ڈیٹا سسٹم میں مستقل طور پر رجسٹرڈ کمپنی کے کوائف سے جڑ جائیں گی اور تمام بلز، لیجر انوائسز اور توسیعی برانڈنگز میں آٹو اپڈیٹ ہوں گی۔
                     </div>
 
                     <div className="flex justify-end pt-2">
@@ -916,7 +1163,7 @@ export default function BackupCalendarManager({
                         type="submit"
                         className="bg-[#8DB600] text-white hover:bg-[#7BA100] text-xs font-bold px-6 py-2 rounded-md shadow cursor-pointer transition-colors"
                       >
-                        تبدیلیاں محفوظ کریں (Save Changes)
+                        کمپنی اور ساس پروفائل محفوظ کریں (Save Integrated Profile)
                       </button>
                     </div>
                   </form>
@@ -1087,6 +1334,206 @@ export default function BackupCalendarManager({
                     </div>
 
                   </div>
+                </div>
+              )}
+
+              {/* PAGE 6: SaaS TECHNICAL DEVELOPER SUITE */}
+              {currentSettingPage === 'saas_info' && (
+                <div className="space-y-5 text-xs font-semibold text-stone-800 animate-fadeIn">
+                  <div className="border-b pb-2 flex items-center justify-between">
+                    <span className="text-stone-450 text-xs font-mono">SaaS Technical SDK & Blueprints</span>
+                    <h3 className="text-lg font-black text-stone-900 flex items-center gap-2">
+                      <Terminal className="w-5 h-5 text-emerald-650 animate-pulse" />
+                      ساس کلاؤڈ ڈیولپر ڈیٹا اور بلیو پرنٹ (SaaS Cloud Technical Suite)
+                    </h3>
+                  </div>
+
+                  <div className="p-4 bg-emerald-50 border border-emerald-150 rounded-xl text-emerald-950 space-y-2 leading-relaxed">
+                    <p className="font-bold text-sm">💻 منڈی کھاتہ کلاؤڈ ہائبرڈ ڈویلپمنٹ بلیو پرنٹس:</p>
+                    <p className="text-[11px] font-medium text-stone-700">
+                      یہ مینیو خصوصی طور پر سافٹ ویئر آرکیٹیکٹس اور فل اسٹیک ڈویلپرز کے لیے تیار کیا گیا ہے۔ ساس (SaaS) کلاؤڈ بیسڈ ملٹی ٹیننٹ ڈیٹا بیس اسکیما، جے ڈبلیو ٹی (JWT) ٹوکن تصدیق کا طریقہ اور نیکسٹ جے ایس (Next.js) ہائبرڈ فائل اسٹرکچر مندرجہ ذیل جدولوں میں موجود ہے۔ آپ اس کو براہِ راست کاپی کر کے اپنے نئے پروجیکٹ میں شامل کر سکتے ہیں۔
+                    </p>
+                  </div>
+
+                  {/* 1. Schema Block */}
+                  <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-stone-100 p-3 border-b flex justify-between items-center text-[10px]">
+                      <button 
+                        onClick={() => {
+                          const codeText = `CREATE TYPE business_type_enum AS ENUM (
+  'Sabzi Mandi Commission Agent', 
+  'Wholesaler', 
+  'Retailer', 
+  'Trader'
+);
+
+CREATE TABLE tenants (
+  id VARCHAR(50) PRIMARY KEY,
+  company_name VARCHAR(255) NOT NULL,
+  business_type business_type_enum NOT NULL,
+  registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  owner_name VARCHAR(150),
+  owner_phone VARCHAR(50) NOT NULL,
+  security_pin VARCHAR(255) NOT NULL,
+  expiry_date DATE NOT NULL,
+  subscription_code VARCHAR(30) UNIQUE NOT NULL,
+  status VARCHAR(20) DEFAULT 'Active',
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  tenant_id VARCHAR(50) REFERENCES tenants(id) ON DELETE CASCADE,
+  username VARCHAR(100) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role_type VARCHAR(30) DEFAULT 'Staff',
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(tenant_id, username)
+);`;
+                          navigator.clipboard.writeText(codeText);
+                          alert('ڈیٹا بیس اسکیما کامیابی سے کلپ بورڈ پر کاپی ہو گیا ہے!');
+                        }}
+                        className="bg-stone-200 hover:bg-stone-300 px-3 py-1 rounded font-bold cursor-pointer transition text-stone-700"
+                      >
+                        کاپی کریں (Copy Schema)
+                      </button>
+                      <span className="font-bold font-mono text-stone-600">🧠 1. Cloud Database Schema (PostgreSQL DDL)</span>
+                    </div>
+                    <pre className="p-4 bg-stone-900 text-stone-200 text-[10px] overflow-x-auto text-left font-mono leading-relaxed max-h-72">
+{`-- PostgreSQL Production-Ready Multi-Tenant Schema
+CREATE TYPE business_type_enum AS ENUM (
+  'Sabzi Mandi Commission Agent', 
+  'Wholesaler', 
+  'Retailer', 
+  'Trader'
+);
+
+CREATE TABLE tenants (
+  id VARCHAR(50) PRIMARY KEY,
+  company_name VARCHAR(255) NOT NULL,
+  business_type business_type_enum NOT NULL,
+  registration_date TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  owner_name VARCHAR(150),
+  owner_phone VARCHAR(50) NOT NULL,
+  security_pin VARCHAR(255) NOT NULL, -- Master authorization PIN
+  expiry_date DATE NOT NULL,
+  subscription_code VARCHAR(30) UNIQUE NOT NULL,
+  status VARCHAR(20) DEFAULT 'Active', -- Active, Suspended, Expired
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  tenant_id VARCHAR(50) REFERENCES tenants(id) ON DELETE CASCADE,
+  username VARCHAR(100) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role_type VARCHAR(30) DEFAULT 'Staff', -- Admin, Staff, Viewer
+  is_active BOOLEAN DEFAULT TRUE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE(tenant_id, username)
+);`}
+                    </pre>
+                  </div>
+
+                  {/* 2. JWT Flow Code */}
+                  <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-stone-100 p-3 border-b flex justify-between items-center text-[10px]">
+                      <button 
+                        onClick={() => {
+                          const codeText = `import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+
+export const generateToken = (payload: { userId: number; tenantId: string }) => {
+  return jwt.sign(payload, process.env.JWT_SECRET || 'secret123', { expiresIn: '30d' });
+};
+
+export const authenticateTenant = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'منسوخ رسائی! ٹوکن غائب ہے۔' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123') as { userId: number; tenantId: string };
+    req.user = decoded;
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'غیر معتبر سیشن ٹوکن!' });
+  }
+};`;
+                          navigator.clipboard.writeText(codeText);
+                          alert('جے ڈبلیو ٹی کوڈ کامیابی سے کاپی ہو گیا ہے!');
+                        }}
+                        className="bg-stone-200 hover:bg-stone-300 px-3 py-1 rounded font-bold cursor-pointer transition text-stone-700"
+                      >
+                        کاپی کریں (Copy JWT Implementation)
+                      </button>
+                      <span className="font-bold font-mono text-stone-600">🔐 2. JWT Tenant Authentication (Express / Node.js)</span>
+                    </div>
+                    <pre className="p-4 bg-stone-900 text-stone-200 text-[10px] overflow-x-auto text-left font-mono leading-relaxed max-h-72">
+{`// middleware/auth.ts - Multi-Tenant Authentication Guard
+import jwt from 'jsonwebtoken';
+
+export const generateToken = (payload: { userId: number; tenantId: string }) => {
+  return jwt.sign(payload, process.env.JWT_SECRET || 'Fozia@sif1234', { expiresIn: '30d' });
+};
+
+export const authenticateTenant = async (req: any, res: any, next: any) => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'رسائی روک دی گئی! سیکیورٹی سیشن غائب ہے۔' });
+  }
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'Fozia@sif1234') as { userId: number; tenantId: string };
+    req.user = decoded; // Mounts tenant ID dynamically
+    next();
+  } catch (error) {
+    return res.status(403).json({ error: 'غیر معتبر یا زائد المیعاد سیشن ٹوکن!' });
+  }
+};`}
+                    </pre>
+                  </div>
+
+                  {/* 3. Starter Structure */}
+                  <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-stone-100 p-3 border-b flex justify-between items-center text-[10px]">
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(SAAS_STRUCTURE_CODE);
+                          alert('ڈھانچہ کامیابی سے کاپی ہو گیا ہے!');
+                        }}
+                        className="bg-stone-200 hover:bg-stone-300 px-3 py-1 rounded font-bold cursor-pointer transition text-stone-700"
+                      >
+                        کاپی کریں (Copy Code Structure)
+                      </button>
+                      <span className="font-bold font-mono text-stone-600">💻 3. Next.js + Node SaaS Native Directory Starters</span>
+                    </div>
+                    <pre className="p-4 bg-stone-950 text-emerald-450 text-[10px] overflow-x-auto text-left font-mono leading-relaxed">
+{SAAS_STRUCTURE_CODE}
+                    </pre>
+                  </div>
+
+                  {/* 4. Super Admin UI Prompt Block */}
+                  <div className="bg-white border rounded-xl overflow-hidden shadow-sm">
+                    <div className="bg-stone-100 p-3 border-b flex justify-between items-center text-[10px]">
+                      <button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(SAAS_ADMIN_PROMPT);
+                          alert('ایڈمن ڈیش بورڈ پرامپٹ کامیابی سے کاپی ہو گیا ہے!');
+                        }}
+                        className="bg-stone-200 hover:bg-stone-300 px-3 py-1 rounded font-bold cursor-pointer transition text-stone-700"
+                      >
+                        کاپی کریں (Copy Admin Prompt)
+                      </button>
+                      <span className="font-bold font-mono text-stone-600">📊 4. Master Prompt for generating SaaS Admin Control Panel</span>
+                    </div>
+                    <div className="p-4 bg-emerald-950/20 text-emerald-900 text-[11px] leading-relaxed select-all border-dashed border border-emerald-300 rounded-b-xl">
+                      {SAAS_ADMIN_PROMPT}
+                    </div>
+                  </div>
+
                 </div>
               )}
 

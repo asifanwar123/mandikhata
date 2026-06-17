@@ -15,7 +15,33 @@ import {
   INITIAL_JOURNAL, INITIAL_WADAY 
 } from './utils/initialData';
 
-import { Lock, Unlock, HelpCircle, HardDriveDownload } from 'lucide-react';
+import { Lock, Unlock, HelpCircle, HardDriveDownload, Building, User, Mail, FileText, CheckCircle2, Key, CreditCard, Globe, Award, ShieldCheck, DollarSign, Smartphone, Plus, X, ChevronRight, Info, Sparkles, Copy, Eye, EyeOff } from 'lucide-react';
+
+export interface RegisteredCompany {
+  companyId: string;
+  companyName: string;
+  businessType: string;
+  logoUrl?: string;
+  address: string;
+  city: string;
+  country: string;
+  ownerName: string;
+  ownerPhone: string;
+  emailAddress: string;
+  cnicTax?: string;
+  username: string;
+  passwordConfirm: string;
+  subscriptionCode: string;
+  subscriptionPlan: string;
+  preferredLanguage: string;
+  preferredCurrency: string;
+  status: 'trial' | 'active' | 'expired';
+  createdAt: string;
+  expiryDate?: string;
+  activationDate?: string;
+  plan?: string;
+  licenseCode?: string;
+}
 
 export default function App() {
   // Authentication & PIN Code Screen Replications from screenshot
@@ -24,44 +50,135 @@ export default function App() {
   const [pinCode, setPinCode] = useState('');
   const [pinError, setPinError] = useState('');
 
+  // Master Pin authentication state
+  const [isPinPromptOpen, setIsPinPromptOpen] = useState(false);
+  const [masterPinInput, setMasterPinInput] = useState('');
+  const [masterPinError, setMasterPinError] = useState('');
+
+  // Admin Suite Panel state controls
+  const [isAdminAuthModalOpen, setIsAdminAuthModalOpen] = useState(false);
+  const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
+  const [adminPinInput, setAdminPinInput] = useState('');
+  const [adminPinError, setAdminPinError] = useState('');
+  const [editingTenantId, setEditingTenantId] = useState<string | null>(null);
+  const [editingTenantData, setEditingTenantData] = useState<RegisteredCompany | null>(null);
+  const [isNewTenantFormOpen, setIsNewTenantFormOpen] = useState(false);
+  const [newTenantForm, setNewTenantForm] = useState({
+    companyName: '',
+    businessType: 'Sabzi Mandi Commission Agent',
+    address: '',
+    city: '',
+    ownerName: '',
+    ownerPhone: '',
+    emailAddress: '',
+    username: '',
+    passwordConfirm: '',
+    plan: 'Trial',
+    status: 'trial'
+  });
+
+  // Switcher to Show New Company Registration screen
+  const [isNewRegistrationOpen, setIsNewRegistrationOpen] = useState(false);
+  
+  // Custom tenants storage
+  const [currentTenantId, setCurrentTenantId] = useState<string>(() => {
+    return localStorage.getItem('mm_currentTenantId') || '';
+  });
+
+  const [tenants, setTenants] = useState<RegisteredCompany[]>(() => {
+    const saved = localStorage.getItem('mm_registered_tenants');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mm_currentTenantId', currentTenantId);
+  }, [currentTenantId]);
+
+  // Highlight show newly registered success modal/receipt details
+  const [newRegSuccessDetails, setNewRegSuccessDetails] = useState<RegisteredCompany | null>(null);
+
+  // Input states for Login Credentials
+  const [enteredUsername, setEnteredUsername] = useState('');
+  const [enteredPassword, setEnteredPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Custom company registration form state
+  const [regForm, setRegForm] = useState({
+    companyName: '',
+    businessType: 'Sabzi Mandi Commission Agent',
+    address: '',
+    city: '',
+    country: 'پاکستان',
+    ownerName: '',
+    ownerPhone: '',
+    emailAddress: '',
+    cnicTax: '',
+    username: '',
+    password: '',
+    confirmPassword: '',
+    subscriptionPlan: 'Monthly Plan (PKR 300/mo)',
+    preferredLanguage: 'Urdu',
+    preferredCurrency: 'PKR',
+    agreeTerms: false,
+    agreePrivacy: false,
+    logoBlob: ''
+  });
+
+
   // Primary State Managers (Syncing with localStorage for real offline persistence)
   const [accounts, setAccounts] = useState<Account[]>(() => {
-    const saved = localStorage.getItem('mm_accounts');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_accounts` : 'mm_accounts';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : [...INITIAL_ACCOUNTS, ...INITIAL_CUSTOMERS, ...INITIAL_SUPPLIERS];
   });
 
   const [invoices, setInvoices] = useState<MarketInvoice[]>(() => {
-    const saved = localStorage.getItem('mm_invoices');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_invoices` : 'mm_invoices';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_INVOICES;
   });
 
   const [purchases, setPurchases] = useState<PurchaseInvoice[]>(() => {
-    const saved = localStorage.getItem('mm_purchases');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_purchases` : 'mm_purchases';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_PURCHASES;
   });
 
   const [receipts, setReceipts] = useState<CollectionReceipt[]>(() => {
-    const saved = localStorage.getItem('mm_receipts');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_receipts` : 'mm_receipts';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_RECEIPTS;
   });
 
   const [payments, setPayments] = useState<PaymentVoucher[]>(() => {
-    const saved = localStorage.getItem('mm_payments');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_payments` : 'mm_payments';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
   });
 
   const [expenses, setExpenses] = useState<ExpenseRecord[]>(() => {
-    const saved = localStorage.getItem('mm_expenses');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_expenses` : 'mm_expenses';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_EXPENSES;
   });
 
   const [journals, setJournals] = useState<JournalEntry[]>(() => {
-    const saved = localStorage.getItem('mm_journals');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_journals` : 'mm_journals';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_JOURNAL;
   });
 
   const [reminders, setReminders] = useState<PromiseReminder[]>(() => {
-    const saved = localStorage.getItem('mm_reminders');
+    const tenantId = localStorage.getItem('mm_currentTenantId') || '';
+    const key = tenantId ? `mm_${tenantId}_reminders` : 'mm_reminders';
+    const saved = localStorage.getItem(key);
     return saved ? JSON.parse(saved) : INITIAL_WADAY;
   });
 
@@ -76,38 +193,46 @@ export default function App() {
   // User Authority level
   const [currentUserRole, setCurrentUserRole] = useState<UserRole>('Admin');
 
-  // Sync back state to localStorage automatically on state alteration
+  // Sync back state to localStorage automatically on state alteration with tenant prefix-awareness
   useEffect(() => {
-    localStorage.setItem('mm_accounts', JSON.stringify(accounts));
-  }, [accounts]);
+    const key = currentTenantId ? `mm_${currentTenantId}_accounts` : 'mm_accounts';
+    localStorage.setItem(key, JSON.stringify(accounts));
+  }, [accounts, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_invoices', JSON.stringify(invoices));
-  }, [invoices]);
+    const key = currentTenantId ? `mm_${currentTenantId}_invoices` : 'mm_invoices';
+    localStorage.setItem(key, JSON.stringify(invoices));
+  }, [invoices, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_purchases', JSON.stringify(purchases));
-  }, [purchases]);
+    const key = currentTenantId ? `mm_${currentTenantId}_purchases` : 'mm_purchases';
+    localStorage.setItem(key, JSON.stringify(purchases));
+  }, [purchases, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_receipts', JSON.stringify(receipts));
-  }, [receipts]);
+    const key = currentTenantId ? `mm_${currentTenantId}_receipts` : 'mm_receipts';
+    localStorage.setItem(key, JSON.stringify(receipts));
+  }, [receipts, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_payments', JSON.stringify(payments));
-  }, [payments]);
+    const key = currentTenantId ? `mm_${currentTenantId}_payments` : 'mm_payments';
+    localStorage.setItem(key, JSON.stringify(payments));
+  }, [payments, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_expenses', JSON.stringify(expenses));
-  }, [expenses]);
+    const key = currentTenantId ? `mm_${currentTenantId}_expenses` : 'mm_expenses';
+    localStorage.setItem(key, JSON.stringify(expenses));
+  }, [expenses, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_journals', JSON.stringify(journals));
-  }, [journals]);
+    const key = currentTenantId ? `mm_${currentTenantId}_journals` : 'mm_journals';
+    localStorage.setItem(key, JSON.stringify(journals));
+  }, [journals, currentTenantId]);
 
   useEffect(() => {
-    localStorage.setItem('mm_reminders', JSON.stringify(reminders));
-  }, [reminders]);
+    const key = currentTenantId ? `mm_${currentTenantId}_reminders` : 'mm_reminders';
+    localStorage.setItem(key, JSON.stringify(reminders));
+  }, [reminders, currentTenantId]);
 
   // Software / Settings State
   const [companyName, setCompanyName] = useState<string>(() => {
@@ -176,14 +301,79 @@ export default function App() {
     localStorage.setItem('mm_taxRate', String(taxRate));
   }, [taxRate]);
 
-  // LOGIN REPLICATION (Pin 1558 is present in original screenshot status footer)
+  // Synchronous sync of registered tenants
+  useEffect(() => {
+    localStorage.setItem('mm_registered_tenants', JSON.stringify(tenants));
+  }, [tenants]);
+
+  // Dynamic root direction (LTR/RTL) adjusting automatically based on language
+  useEffect(() => {
+    const isUrdu = appLanguage === 'Urdu' || appLanguage === 'Both';
+    document.documentElement.dir = isUrdu ? 'rtl' : 'ltr';
+    document.documentElement.lang = isUrdu ? 'ur' : 'en';
+  }, [appLanguage]);
+
+  // Auto-branding sync when currentTenantId shifts
+  useEffect(() => {
+    if (currentTenantId) {
+      const activeT = tenants.find(t => t.companyId === currentTenantId);
+      if (activeT) {
+        setCompanyName(activeT.companyName);
+        setCompanyAddress(activeT.address + (activeT.city ? '، ' + activeT.city : ''));
+        setCompanyPhone(activeT.ownerPhone);
+        setAppLanguage(activeT.preferredLanguage || 'Urdu');
+        setCurrencySymbol(activeT.preferredCurrency === 'PKR' ? 'Rs' : 'Rs');
+      }
+    }
+  }, [currentTenantId, tenants]);
+
+  // Integrated edit profile SaaS callback
+  const handleUpdateTenantProfile = (updatedTenant: RegisteredCompany) => {
+    setTenants(prev => prev.map(t => t.companyId === updatedTenant.companyId ? updatedTenant : t));
+  };
+
+  // LOGIN REPLICATION (Multi-tenant company validation + Default operator login)
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinCode === '1558' || pinCode === 'admin') {
+    const cleanUser = enteredUsername.trim();
+    const cleanPass = enteredPassword.trim();
+
+    if (!cleanUser || !cleanPass) {
+      setPinError('برائے مہربانی صارف کا نام اور پاس ورڈ درج کریں۔');
+      return;
+    }
+
+    // Default built-in Administrator account
+    if (
+      (cleanUser.toLowerCase() === 'admin' || cleanUser === 'ایڈمن') && 
+      (cleanPass === '1558' || cleanPass.toLowerCase() === 'admin')
+    ) {
+      setCurrentTenantId('');
       setIsAuthenticated(true);
       setPinError('');
+      setUsername('Admin');
+      return;
+    }
+
+    // Dynamic Multi-tenant authentication check
+    const matchedTenant = tenants.find(
+      t => t.username.toLowerCase() === cleanUser.toLowerCase() && t.passwordConfirm === cleanPass
+    );
+
+    if (matchedTenant) {
+      setCurrentTenantId(matchedTenant.companyId);
+      // Swapping business branding configurations dynamically!
+      setCompanyName(matchedTenant.companyName);
+      setCompanyAddress(matchedTenant.address + '، ' + matchedTenant.city);
+      setCompanyPhone(matchedTenant.ownerPhone);
+      setAppLanguage(matchedTenant.preferredLanguage);
+      setCurrencySymbol(matchedTenant.preferredCurrency === 'PKR' ? 'Rs' : 'US $');
+      
+      setIsAuthenticated(true);
+      setPinError('');
+      setUsername(matchedTenant.ownerName);
     } else {
-      setPinError('غلط استعمال کنندہ کوڈ درج کیا گیا ہے۔ (اشارہ: 1558)');
+      setPinError('غلط صارف نام یا پاس ورڈ درج کیا گیا ہے۔ (ڈیفالٹ اشارہ: admin / 1558)');
     }
   };
 
@@ -352,6 +542,7 @@ export default function App() {
           <div className="p-4 flex gap-2">
             <button
               onClick={() => {
+                setCurrentTenantId('');
                 setIsAuthenticated(false);
                 setPinCode('');
                 setCurrentTab('dashboard');
@@ -372,73 +563,756 @@ export default function App() {
     );
   }
 
-  // RENDER INTERMEDIATE LOCK SCREEN
+  // RENDER INTERMEDIATE LOCK SCREEN / SAAS REGISTRATION WORKFLOW
   if (!isAuthenticated) {
-    return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-[#E5E5E5] text-right font-sans p-4">
-        <div className="bg-white rounded-lg border-4 border-[#7BA100] w-full max-w-md overflow-hidden shadow-2xl">
-          
-          {/* Header */}
-          <div className="bg-[#8DB600] text-white p-6 flex flex-col items-center gap-2">
-            <img 
-              src="/src/assets/images/veg_urdu_logo_1781537269966.jpg" 
-              alt="Mandi Khata Vegetable Logo" 
-              referrerPolicy="no-referrer"
-              className="w-20 h-20 rounded-full border-2 border-white object-cover shadow-md mb-1" 
-            />
-            <h1 className="text-2xl font-black tracking-wide leading-none">{companyName}</h1>
-            <p className="text-xs font-semibold bg-white/20 px-3 py-1 rounded mt-1 text-center">کھاتہ جات {companyKhataYear} (منڈی کھاتہ)</p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleLoginSubmit} className="p-6 space-y-4">
-            {pinError && (
-              <div className="bg-rose-50 border border-rose-300 text-rose-800 p-2.5 rounded text-xs font-bold leading-normal text-right">
-                {pinError}
-              </div>
-            )}
-
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-stone-600">استعمال کنندہ (Username):</label>
-              <select
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="w-full p-2 border-2 border-stone-200 rounded text-xs bg-white text-stone-800 text-left outline-none"
-              >
-                <option value="Admin">ایڈمن (Admin)</option>
-                <option value="Manager">مینیجر (Manager)</option>
-                <option value="Accountant">اکاؤنٹنٹ (Accountant)</option>
-                <option value="Operator">موقع آپریٹر (Operator)</option>
-              </select>
+    // 1. Success Ticket Overlay after Registration
+    if (newRegSuccessDetails) {
+      return (
+        <div className="flex flex-col justify-center items-center min-h-screen bg-stone-100 text-right font-sans p-4" dir="rtl">
+          <div className="bg-white rounded-2xl border-2 border-emerald-500 w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-emerald-600 to-[#7BA100] text-white p-6 text-center space-y-2">
+              <CheckCircle2 className="w-16 h-16 text-white mx-auto animate-bounce" />
+              <h1 className="text-2xl font-black">ادارہ کامیابی سے رجسٹر ہو گیا ہے!</h1>
+              <p className="text-xs opacity-90">ڈیجیٹل منڈی کھاتہ میں آپ کا خیرمقدم ہے</p>
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-stone-600">پاس ورڈ یا کٹوتی پن کوڈ (1558):</label>
-              <input
-                type="password"
-                placeholder="****"
-                value={pinCode}
-                onChange={(e) => setPinCode(e.target.value)}
-                className="w-full p-2 border-2 border-stone-200 rounded text-xs text-left font-mono outline-none focus:border-[#8DB600]"
-                required
+            {/* Ticket body */}
+            <div className="p-6 space-y-4">
+              <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-100 space-y-3">
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">کمپنی آئی ڈی:</span>
+                  <span className="font-mono font-black text-emerald-700">{newRegSuccessDetails.companyId}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">کمپنی نام:</span>
+                  <span className="font-medium text-stone-950">{newRegSuccessDetails.companyName}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">کاروبار کی قسم:</span>
+                  <span className="font-medium text-stone-900">{newRegSuccessDetails.businessType}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">مالک کا نام:</span>
+                  <span className="font-medium text-stone-900">{newRegSuccessDetails.ownerName}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">موبائل فون نمبر:</span>
+                  <span className="font-mono font-medium text-stone-900">{newRegSuccessDetails.ownerPhone}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">لاگ ان یوزرنیم:</span>
+                  <span className="font-mono font-bold text-stone-900">{newRegSuccessDetails.username}</span>
+                </div>
+                <div className="flex justify-between border-b pb-2 border-stone-200">
+                  <span className="font-bold text-stone-700">پاس ورڈ (پن کوڈ):</span>
+                  <span className="font-mono font-bold text-emerald-800">{newRegSuccessDetails.passwordConfirm}</span>
+                </div>
+              </div>
+
+              {/* Secure Active Code Box */}
+              <div className="bg-amber-50 border-2 border-dashed border-amber-300 p-4 rounded-xl text-center space-y-2">
+                <span className="text-xs font-semibold text-amber-800 block">🔐 آپ کا محفوظ 12 ہندسی سبسکرپشن ایکٹیویشن کوڈ</span>
+                <span className="text-2xl font-mono font-black text-amber-900 tracking-wider block bg-white py-2 rounded-lg border shadow-sm">
+                  {newRegSuccessDetails.subscriptionCode}
+                </span>
+                <p className="text-[10px] text-amber-700 leading-relaxed font-sans">
+                  یہ کوڈ تبدیل نہیں ہوسکتا۔ اس کو محفوظ طریقے سے لکھ لیں یا اسکرین شاٹ لیں۔ یہ آپ کی منڈی کمپنی کا مستقل سیکیورٹی ٹوکن یا لائسنس ہے۔
+                </p>
+              </div>
+
+              {/* Activation Note */}
+              <div className="bg-stone-50 p-3 rounded-lg border border-stone-200 text-xs text-stone-600 space-y-1">
+                <p className="font-bold text-stone-700">🎁 3 یومیہ مفت ٹرائل جاری:</p>
+                <p className="leading-relaxed">آپ کا اکاؤنٹ اب اگلے 3 دن کے لیے مکمل فیچرز کے ساتھ چالو ہے۔ مستقل سروس جاری رکھنے کے لیے رجسٹریشن فیس 5000 روپے جازکیش یا ایزی پیسہ کے ذریعے "0300-8885072" پر بھیجیں اور اسکرین شاٹ بھیجیں۔</p>
+              </div>
+
+              {/* Main Call to Action */}
+              <button
+                onClick={() => {
+                  setNewRegSuccessDetails(null);
+                  setIsAuthenticated(true);
+                  setUsername(newRegSuccessDetails.ownerName);
+                }}
+                className="w-full bg-[#8DB600] text-white py-3 rounded-xl font-bold hover:bg-[#7BA100] transition-colors cursor-pointer text-center text-sm shadow-md flex justify-center items-center gap-2 "
+              >
+                <span>پروگرام کے ڈیش بورڈ پر جائیں</span>
+                <ShieldCheck className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // 2. Company Registration Screen (SaaS Onboarding)
+    if (isNewRegistrationOpen) {
+      const handleRegSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        
+        if (!regForm.companyName.trim()) {
+          alert('براہ کرم کمپنی / منڈی کا نام درج کریں۔');
+          return;
+        }
+        if (!regForm.ownerName.trim()) {
+          alert('براہ کرم مالک کا نام درج کریں۔');
+          return;
+        }
+        if (!regForm.ownerPhone.trim()) {
+          alert('براہ کرم موبائل نمبر درج کریں۔');
+          return;
+        }
+        if (!regForm.username.trim()) {
+          alert('براہ کرم لاگ ان یوزرنیم درج کریں۔');
+          return;
+        }
+        if (!regForm.password.trim()) {
+          alert('براہ کرم پاس ورڈ درج کریں۔');
+          return;
+        }
+        if (regForm.password !== regForm.confirmPassword) {
+          alert('درج کردہ پاس ورڈز آپس میں میچ نہیں کر رہے ہیں!');
+          return;
+        }
+        if (!regForm.agreeTerms || !regForm.agreePrivacy) {
+          alert('آگے بڑھنے کے لیے شرائط و ضوابط اور پرائیویسی پالیسی سے اتفاق لازمی ہے۔');
+          return;
+        }
+
+        // Generate values
+        const randomId = 'MK-' + Math.floor(10000 + Math.random() * 90000).toString();
+        const seg = () => Math.floor(1000 + Math.random() * 9000).toString();
+        const randomSubCode = `${seg()}-${seg()}-${seg()}`;
+
+        const newCompany: RegisteredCompany = {
+          companyId: randomId,
+          companyName: regForm.companyName,
+          businessType: regForm.businessType,
+          address: regForm.address || 'غلا منڈی روڈ، سبزی منڈی',
+          city: regForm.city || 'منڈی ٹاؤن',
+          country: regForm.country,
+          ownerName: regForm.ownerName,
+          ownerPhone: regForm.ownerPhone,
+          emailAddress: regForm.emailAddress || 'mandi_owner@domain.com',
+          cnicTax: regForm.cnicTax,
+          username: regForm.username,
+          passwordConfirm: regForm.password,
+          subscriptionCode: randomSubCode,
+          subscriptionPlan: regForm.subscriptionPlan,
+          preferredLanguage: regForm.preferredLanguage,
+          preferredCurrency: regForm.preferredCurrency,
+          status: 'trial',
+          createdAt: new Date().toLocaleDateString()
+        };
+
+        // Save
+        const updated = [...tenants, newCompany];
+        setTenants(updated);
+        localStorage.setItem('mm_registered_tenants', JSON.stringify(updated));
+
+        // Auto-configure company defaults instantly!
+        setCompanyName(newCompany.companyName);
+        setCompanyAddress(newCompany.address + '، ' + newCompany.city);
+        setCompanyPhone(newCompany.ownerPhone);
+        setAppLanguage(newCompany.preferredLanguage);
+        setCurrencySymbol(newCompany.preferredCurrency === 'PKR' ? 'Rs' : 'US $');
+
+        // Show ticket overlay
+        setNewRegSuccessDetails(newCompany);
+        setIsNewRegistrationOpen(false);
+      };
+
+      return (
+        <div className="min-h-screen bg-[#F3F4F6] py-10 px-4 text-right font-sans flex justify-center items-center" dir="rtl">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl border border-stone-200">
+            {/* Header Panel */}
+            <div className="bg-gradient-to-r from-[#7BA100] via-[#8DB600] to-orange-500 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="space-y-1 text-center md:text-right">
+                <span className="bg-white/20 text-xs px-2.5 py-1 rounded-full font-bold">منڈی کھاتہ ساس (SaaS) کلاؤڈ</span>
+                <h1 className="text-2xl font-black mt-1">نئی کمپنی رجسٹریشن فارم</h1>
+                <p className="text-xs text-white/95">ڈیجیٹل اور خودکار حساباتی نظام برائے سبزی و فروٹ مارکیٹ</p>
+              </div>
+              <img 
+                src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzeDsAtCYGFKat6XlJLYjtDu8NG1T5Iha4xdptJP_gWWEUcbluAdLpjXR3-XD3usEeMKl7xWmGujm-kYfoW7ryp_iJnn94QsHGrUkGL7OrMsXaRH4mBhpMAKbRU6Qvlegj2xRYyhJCu7qlukIm-bOr8VQ2cn-4VGovUcAYJrjn13KbcCWZ-ZjMHEuD1Ts/s1600/Mandi_khata-Logo.png" 
+                alt="Mandi Khata" 
+                className="w-16 h-16 object-contain"
               />
             </div>
 
-            <div className="flex gap-2 items-center justify-end pt-3 text-xs">
-              <button
-                type="submit"
-                className="bg-[#8DB600] text-white px-6 py-2 rounded font-bold hover:bg-[#7BA100] transition-colors cursor-pointer border border-[#7BA100] w-full"
-              >
-                داخل ہوں (Login)
-              </button>
-            </div>
-          </form>
+            {/* Registration Form */}
+            <form onSubmit={handleRegSubmit} className="p-6 md:p-8 space-y-8">
+              {/* Box 1: Company Info */}
+              <div className="space-y-4">
+                <h2 className="text-base font-bold text-stone-800 border-r-4 border-[#8DB600] pr-2.5 pb-0.5">🏢 کمپنی / کاروباری معلومات</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">منڈی کمپنی یا آڑھت کا نام * :</label>
+                    <input 
+                      type="text" 
+                      placeholder="مثال: ممتاز حسین فروٹ ایجنسی" 
+                      value={regForm.companyName}
+                      onChange={e => setRegForm({...regForm, companyName: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-[#8DB600]"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">کاروبار کی قسم * :</label>
+                    <select 
+                      value={regForm.businessType}
+                      onChange={e => setRegForm({...regForm, businessType: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs bg-white outline-none focus:border-[#8DB600]"
+                    >
+                      <option value="Sabzi Mandi Commission Agent">سبزی منڈی کمیشن ایجنٹ</option>
+                      <option value="Wholesaler">تھوک فروش / ہول سیلر</option>
+                      <option value="Retailer">پرچون فروش / ریٹیلر</option>
+                      <option value="Trader">آڑھتی / تاجر</option>
+                      <option value="Other">دیگر مربوط قسم</option>
+                    </select>
+                  </div>
+                </div>
 
-          {/* Footer branding */}
-          <div className="bg-stone-50 p-2 text-center text-[10px] text-stone-400 font-mono border-t">
-            Admin Defaults: user=Admin pin=1558
+                <div className="grid grid-cols-1 md:grid-cols-3 gap- gap-4">
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="block text-xs font-semibold text-stone-600">منڈی کا مکمل پتہ (گلی، ہاؤس یا دکان نمبر) :</label>
+                    <input 
+                      type="text" 
+                      placeholder="دکان نمبر 34، غلہ منڈی روڈ" 
+                      value={regForm.address}
+                      onChange={e => setRegForm({...regForm, address: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-[#8DB600]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">شہر کا نام :</label>
+                    <input 
+                      type="text" 
+                      placeholder="لودھراں" 
+                      value={regForm.city}
+                      onChange={e => setRegForm({...regForm, city: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-[#8DB600]"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">ملک :</label>
+                    <input 
+                      type="text" 
+                      value={regForm.country}
+                      onChange={e => setRegForm({...regForm, country: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-[#8DB600]"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">کمپنی لوگو (اختیاری اپ لوڈ لنک) :</label>
+                    <input 
+                      type="text" 
+                      placeholder="تصویر یا لوگو کا یو آر ایل" 
+                      value={regForm.logoBlob}
+                      onChange={e => setRegForm({...regForm, logoBlob: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-[#8DB600] font-mono text-left"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 2: Owner/Admin info */}
+              <div className="space-y-4">
+                <h2 className="text-base font-bold text-stone-800 border-r-4 border-[#8DB600] pr-2.5 pb-0.5">👤 مالک / منتظم کی ذاتی معلومات</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">مالک کا پورا نام * :</label>
+                    <input 
+                      type="text" 
+                      placeholder="مثال: مہر ممتاز حسین لنگڑیال" 
+                      value={regForm.ownerName}
+                      onChange={e => setRegForm({...regForm, ownerName: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none focus:border-[#8DB600]"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">موبائل فون نمبر * :</label>
+                    <input 
+                      type="tel" 
+                      placeholder="0300-8885072" 
+                      value={regForm.ownerPhone}
+                      onChange={e => setRegForm({...regForm, ownerPhone: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs font-mono outline-none text-left focus:border-[#8DB600]"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">ای میل ایڈریس * :</label>
+                    <input 
+                      type="email" 
+                      placeholder="mandi_owner@domain.com" 
+                      value={regForm.emailAddress}
+                      onChange={e => setRegForm({...regForm, emailAddress: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none text-left font-mono focus:border-[#8DB600]"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">شناختی کارڈ (CNIC) یا ٹیکس نمبر (اختیاری) :</label>
+                    <input 
+                      type="text" 
+                      placeholder="31202-XXXXXXXX-X" 
+                      value={regForm.cnicTax}
+                      onChange={e => setRegForm({...regForm, cnicTax: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs font-mono outline-none focus:border-[#8DB600]"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 3: Login Credentials */}
+              <div className="space-y-4">
+                <h2 className="text-base font-bold text-stone-800 border-r-4 border-orange-500 pr-2.5 pb-0.5">🔐 سسٹم لاگ ان اکاؤنٹ کی کریڈنشلز</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">منتخب کریں یوزرنیم * :</label>
+                    <input 
+                      type="text" 
+                      placeholder="مثال: admin, asif" 
+                      value={regForm.username}
+                      onChange={e => setRegForm({...regForm, username: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs text-left font-mono outline-none focus:border-orange-500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">پاس ورڈ (پاس کوڈ) * :</label>
+                    <input 
+                      type="password" 
+                      placeholder="****" 
+                      value={regForm.password}
+                      onChange={e => setRegForm({...regForm, password: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none text-left font-mono focus:border-orange-500"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="block text-xs font-semibold text-stone-600">پاس ورڈ کی تصدیق کریں * :</label>
+                    <input 
+                      type="password" 
+                      placeholder="****" 
+                      value={regForm.confirmPassword}
+                      onChange={e => setRegForm({...regForm, confirmPassword: e.target.value})}
+                      className="w-full p-2.5 border border-stone-300 rounded-lg text-xs outline-none text-left font-mono focus:border-orange-500"
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 4: Subscription plan */}
+              <div className="bg-stone-50 p-6 rounded-2xl border border-stone-200 grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Free Trial Details */}
+                <div className="space-y-1.5 border-l border-stone-200 pl-3 last:border-0">
+                  <span className="text-[#8DB600] text-sm font-black flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-[#8DB600]" />
+                    مفت آزمائشی مدت (Trial)
+                  </span>
+                  <p className="text-xs text-stone-700 leading-relaxed">
+                    منڈی کھاتہ کے ہر نئے اکاؤنٹ کو رجسٹریشن پر <strong>3 دن کا مفت مکمل ٹرائل</strong> دیا جاتا ہے تاکہ سافٹ ویئر کا تفصیلی جائزہ لیا جاسکے۔
+                  </p>
+                </div>
+
+                {/* Sub Plan details */}
+                <div className="space-y-1.5 border-l border-stone-200 pl-3">
+                  <span className="text-orange-600 text-sm font-black flex items-center gap-1.5">
+                    <CreditCard className="w-4 h-4" />
+                    سروس رجسٹریشن فیس
+                  </span>
+                  <p className="text-xs text-stone-700 leading-relaxed">
+                    سرور ایکٹیویشن اور ڈیٹا کلاؤڈ سنک فیس <strong>5,000 روپے یکبارگی</strong> (One-Time) قابل ادائیگی ہے۔
+                  </p>
+                </div>
+
+                {/* Plans Select */}
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-stone-600">سبسکرپشن پلان منتخب کریں:</label>
+                  <select 
+                    value={regForm.subscriptionPlan}
+                    onChange={e => setRegForm({...regForm, subscriptionPlan: e.target.value})}
+                    className="w-full p-2.5 border border-stone-300 bg-white rounded-lg text-xs font-bold font-sans outline-none focus:border-[#8DB600]"
+                  >
+                    <option value="Monthly Plan (PKR 300/mo)">ماہانہ پلان - 300 روپے ماہانہ</option>
+                    <option value="Yearly Plan (PKR 2,500/yr)">سالانہ بچت پلان - 2,500 روپے سالانہ</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Box 5: Payment Info channels */}
+              <div className="space-y-3">
+                <h2 className="text-base font-bold text-stone-800 border-r-4 border-amber-500 pr-2.5 pb-0.5">💰 آفیشل ادائیگی کے باضابطہ طریقے</h2>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                  <div className="bg-white p-3 rounded-lg border border-stone-200 flex items-center gap-3">
+                    <div className="p-2 bg-red-50 text-red-650 rounded-full font-bold text-sm">JC</div>
+                    <div>
+                      <span className="block text-xs font-semibold text-stone-500">جاز کیش (JazzCash)</span>
+                      <strong className="text-xs text-stone-900 font-mono">0300-8885072</strong>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-stone-200 flex items-center gap-3">
+                    <div className="p-2 bg-emerald-50 text-emerald-600 rounded-full font-bold text-sm">EP</div>
+                    <div>
+                      <span className="block text-xs font-semibold text-stone-500">ایزی پیسہ (Easypaisa)</span>
+                      <strong className="text-xs text-stone-900 font-mono">0300-8885072</strong>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-stone-200 flex items-center gap-3">
+                    <div className="p-2 bg-blue-50 text-blue-600 rounded-full font-bold text-sm">RT</div>
+                    <div>
+                      <span className="block text-xs font-semibold text-stone-500">راست آئی ڈی (Raast)</span>
+                      <strong className="text-xs text-stone-900 font-mono">+923008885072</strong>
+                    </div>
+                  </div>
+                  <div className="bg-white p-3 rounded-lg border border-stone-200 flex items-center gap-2 text-stone-700">
+                    <Info className="w-5 h-5 text-[#8DB600] shrink-0" />
+                    <span className="text-[10px] leading-relaxed">رسید ڈویلپر واٹس ایپ پر بھیج کر اکاؤنٹ لائسنس مستقل ایکٹیویٹ کرائیں۔</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Box 6: Preferences */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 border-t">
+                {/* Language / Currency Preferences */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-stone-700">⚙️ سسٹم ترجیحات (System Preferences)</h3>
+                  <div className="flex gap-4">
+                    <div className="flex-1 space-y-1">
+                      <label className="block text-[11px] text-stone-500">پسندیدہ زبان :</label>
+                      <select 
+                        value={regForm.preferredLanguage}
+                        onChange={e => setRegForm({...regForm, preferredLanguage: e.target.value})}
+                        className="w-full p-2 border rounded-lg text-xs bg-white outline-none"
+                      >
+                        <option value="Urdu">اردو (Urdu)</option>
+                        <option value="English">English</option>
+                        <option value="Both">دونوں (Urdu / English)</option>
+                      </select>
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="block text-[11px] text-stone-500">سافٹ ویئر کرنسی :</label>
+                      <select 
+                        value={regForm.preferredCurrency}
+                        onChange={e => setRegForm({...regForm, preferredCurrency: e.target.value})}
+                        className="w-full p-2 border rounded-lg text-xs bg-white outline-none"
+                      >
+                        <option value="PKR">روپیہ (PKR)</option>
+                        <option value="USD">امریکی ڈالر (USD)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Consent switches */}
+                <div className="space-y-2 flex flex-col justify-end">
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-700">
+                    <input 
+                      type="checkbox" 
+                      checked={regForm.agreeTerms}
+                      onChange={e => setRegForm({...regForm, agreeTerms: e.target.checked})}
+                      className="rounded accent-[#8DB600] w-4 h-4 cursor-pointer"
+                    />
+                    <span>میں منڈی کھاتہ کے مندرج شرائط و ضوابط (Terms & Conditions) سے اتفاق کرتا ہوں۔ *</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-stone-700">
+                    <input 
+                      type="checkbox" 
+                      checked={regForm.agreePrivacy}
+                      onChange={e => setRegForm({...regForm, agreePrivacy: e.target.checked})}
+                      className="rounded accent-[#8DB600] w-4 h-4 cursor-pointer"
+                    />
+                    <span>میں پرائیویسی پالیسی (Privacy Policy) قبول کرنے کا حلف اٹھاتا ہوں۔ *</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Action buttons footer */}
+              <div className="flex flex-col sm:flex-row-reverse gap-3 pt-6 border-t font-sans">
+                <button
+                  type="submit"
+                  className="bg-emerald-600 text-white px-8 py-3 rounded-xl font-bold cursor-pointer hover:bg-emerald-700 transition-colors shadow flex items-center justify-center gap-2"
+                >
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span>کمپنی اکاؤنٹ تیار کریں (Create Account)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRegForm({
+                      companyName: '',
+                      businessType: 'Sabzi Mandi Commission Agent',
+                      address: '',
+                      city: '',
+                      country: 'پاکستان',
+                      ownerName: '',
+                      ownerPhone: '',
+                      emailAddress: '',
+                      cnicTax: '',
+                      username: '',
+                      password: '',
+                      confirmPassword: '',
+                      subscriptionPlan: 'Monthly Plan (PKR 300/mo)',
+                      preferredLanguage: 'Urdu',
+                      preferredCurrency: 'PKR',
+                      agreeTerms: false,
+                      agreePrivacy: false,
+                      logoBlob: ''
+                    });
+                  }}
+                  className="bg-stone-100 text-stone-700 border hover:bg-stone-200 px-6 py-3 rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  فارم صاف کریں (Reset)
+                </button>
+                <div className="grow"></div>
+                <button
+                  type="button"
+                  onClick={() => setIsNewRegistrationOpen(false)}
+                  className="bg-rose-100 hover:bg-rose-200 text-rose-800 px-6 py-3 rounded-xl text-xs font-bold cursor-pointer"
+                >
+                  واپس لاگ ان ونڈو جائیں (Back to Login)
+                </button>
+              </div>
+            </form>
           </div>
         </div>
+      );
+    }
+
+    // 3. Render High-Polish Landing Split-Screen & Authentication Interface
+    return (
+      <div className="min-h-screen bg-[#E5E5E5] flex justify-center items-center font-sans p-2 sm:p-4 text-right" dir="rtl">
+        {/* Landscape Dual Card Board */}
+        <div className="bg-white rounded-3xl w-full max-w-4xl overflow-hidden shadow-2xl flex flex-col md:flex-row transition-all border border-stone-200 min-h-[500px]">
+          
+          {/* LEFT AREA: Modern Brand Profile (No English, purely Urdu details) */}
+          <div className="w-full md:w-1/2 p-6 md:p-10 text-white flex flex-col justify-between relative bg-gradient-to-br from-[#123e7f] via-[#2563EB] to-[#1E40AF] overflow-hidden min-h-[250px] md:min-h-auto">
+            {/* Visual ambient curves pattern mimicking the image */}
+            <div className="absolute -top-12 -left-12 w-48 h-48 bg-white/10 rounded-full blur-2xl"></div>
+            <div className="absolute bottom-[-10%] right-[-10%] w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+            <div className="absolute top-1/3 left-10 w-24 h-24 bg-white/5 rounded-full"></div>
+
+            {/* Application Logo & Head Title */}
+            <div className="space-y-4 relative z-10">
+              <div className="flex items-center gap-3">
+                <img 
+                  src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzeDsAtCYGFKat6XlJLYjtDu8NG1T5Iha4xdptJP_gWWEUcbluAdLpjXR3-XD3usEeMKl7xWmGujm-kYfoW7ryp_iJnn94QsHGrUkGL7OrMsXaRH4mBhpMAKbRU6Qvlegj2xRYyhJCu7qlukIm-bOr8VQ2cn-4VGovUcAYJrjn13KbcCWZ-ZjMHEuD1Ts/s1600/Mandi_khata-Logo.png" 
+                  alt="منڈی کھاتہ لوگو" 
+                  referrerPolicy="no-referrer"
+                  className="w-16 h-16 object-contain drop-shadow" 
+                />
+                <div>
+                  <h1 className="text-2xl font-black tracking-tight leading-none text-white font-sans">منڈی کھاتہ</h1>
+                  <span className="text-[9px] opacity-80 tracking-widest block font-sans">MANDI KHATA ERP</span>
+                </div>
+              </div>
+
+              <div className="space-y-2 pt-4">
+                <h2 className="text-xl md:text-2xl font-black leading-tight text-amber-300">سبزی و فروٹ منڈی ڈیجیٹل کلاؤڈ سسٹم</h2>
+                <div className="h-1.5 w-16 bg-amber-400 rounded-full"></div>
+              </div>
+            </div>
+
+            {/* Application Arabic/Urdu description paragraph */}
+            <div className="relative z-10 pt-4 md:pt-0">
+              <p className="text-xs md:text-sm font-light leading-relaxed opacity-95 text-justify">
+                منڈی کھاتہ پاکستان بھر کی غلہ و سبزی منڈیوں کے لیے تیار کردہ سب سے مقبول اور محفوظ خودکار اکاؤنٹنگ پروگرام ہے۔ یہ آپ کو گاہکوں اور سپلائرز کے کھاتے، روزنامچہ، یومیہ فروخت کا کمیشن، پلے داری، مزدوری کی کٹوتیاں، اور کیش ان ہینڈ رپورٹس انگلیوں کے اشارے پر فراہم کرتا ہے۔ اب اپنے منڈی کاروبار کو روایتی کاغذ سے ڈیجیٹل کلاؤڈ پر منتقل کریں۔
+              </p>
+            </div>
+
+            {/* Dev Hotline bar */}
+            <div className="relative z-10 text-xs text-amber-200 font-sans border-t border-white/20 pt-4 flex justify-between items-center text-[10.5px]">
+              <span>ڈویلپر ہاٹ لائن: 03008885072 | 03026834300</span>
+              <span className="font-mono bg-white/15 px-2 py-0.5 rounded text-[9.5px]">v1.12 SaaS</span>
+            </div>
+          </div>
+
+          {/* RIGHT AREA: High-Fidelity Login form Card */}
+          <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col justify-between font-sans">
+            <div className="space-y-6">
+              {/* Card sign in headers */}
+              <div className="space-y-1">
+                <h3 className="text-2xl font-black text-stone-900 leading-none">کھاتہ لاگ ان</h3>
+                <p className="text-xs text-stone-500 font-medium">ذاتی اکاؤنٹ اور بادل کھاتہ تک رسائی حاصل کریں</p>
+              </div>
+
+              {/* Login error alerts */}
+              {pinError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 p-3 rounded-xl text-xs font-bold leading-normal animate-shake">
+                  {pinError}
+                </div>
+              )}
+
+              {/* Form inputs */}
+              <form onSubmit={handleLoginSubmit} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-stone-700">صارف کا نام (Username) :</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="اپنا صارف نام درج کریں..."
+                      value={enteredUsername}
+                      onChange={(e) => setEnteredUsername(e.target.value)}
+                      className="w-full p-3 border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-sans text-stone-800"
+                      required
+                    />
+                    <User className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-bold text-stone-700">پاس ورڈ یا پن کوڈ :</label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="سیکورٹی پن کوڈ درج کریں..."
+                      value={enteredPassword}
+                      onChange={(e) => setEnteredPassword(e.target.value)}
+                      className="w-full p-3 pl-14 border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-mono text-stone-900"
+                      required
+                    />
+                    {/* The SHOW/HIDE toggle perfectly replicated from the Sign In mockup image! */}
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-blue-600 hover:text-blue-800"
+                    >
+                      {showPassword ? 'چھپائیں' : 'دکھائیں'}
+                    </button>
+                    <Key className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                  </div>
+                </div>
+
+                {/* Sub features row */}
+                <div className="flex justify-between items-center pt-1 text-[11px] font-bold text-stone-600">
+                  <label className="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" className="rounded border-stone-300 text-blue-600 w-3.5 h-3.5" defaultChecked />
+                    <span>مجھے یاد رکھیں</span>
+                  </label>
+                  <span className="text-stone-400">بغیر انٹرنیٹ کے بھی رسائی</span>
+                </div>
+
+                {/* Submit button following the design block */}
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-blue-600 to-[#123e7f] hover:from-blue-700 hover:to-[#0f3266] text-white py-3 rounded-xl font-bold transition-all shadow-md text-xs active:scale-[0.99] cursor-pointer mt-4"
+                >
+                  اپنے کلاؤڈ کھاتہ میں داخل ہوں
+                </button>
+              </form>
+            </div>
+
+            {/* BOTTOM SPECIAL FEATURES OPTION SETS */}
+            <div className="border-t pt-4 mt-6 flex flex-col gap-2">
+              <span className="text-xs text-stone-500 font-medium block">نیا کاروبار رجسٹر کرنے کی تلاش ہے؟</span>
+              <button
+                onClick={() => setIsPinPromptOpen(true)}
+                className="w-full bg-orange-50 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>نیا منڈی ادارہ رجسٹر کریں (New SaaS Registration)</span>
+              </button>
+              <div className="text-[10px] text-stone-400 font-mono text-center pt-1">
+                سافٹ ویئر کے ڈیفالٹ داخلہ لاگ ان کریڈنشلز: admin / 1558
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. MASTER PIN SUB-PROMPT MODAL POPUP */}
+        {isPinPromptOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4" dir="rtl">
+            <div className="bg-white rounded-2xl max-w-sm w-full p-6 space-y-4 border border-stone-200 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="flex justify-between items-start">
+                <h4 className="text-base font-black text-rose-800 flex items-center gap-1.5">
+                  <Unlock className="w-5 h-5" />
+                  سیکیورٹی تصدیق درکار ہے!
+                </h4>
+                <button 
+                  onClick={() => {
+                    setIsPinPromptOpen(false);
+                    setMasterPinInput('');
+                    setMasterPinError('');
+                  }}
+                  className="text-stone-400 hover:text-stone-600"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="text-xs text-stone-600 leading-relaxed font-sans">
+                نیا منڈی ادارہ بنانے کیلئے تصدیقی ماسٹر پن کوڈ درج کریں۔ یہ کوڈ صرف مجاز منتظمین یا منڈی کھاتہ کے ری سیلرز کے پاس ہوتا ہے۔
+              </div>
+
+              {masterPinError && (
+                <div className="bg-rose-50 border border-rose-200 text-rose-800 p-2.5 rounded-lg text-[10.5px] leading-relaxed">
+                  {masterPinError}
+                </div>
+              )}
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  // Check pin code (type is password / must hide)
+                  if (masterPinInput === 'Fozia@sif1234') {
+                    setIsPinPromptOpen(false);
+                    setIsNewRegistrationOpen(true);
+                    setMasterPinInput('');
+                    setMasterPinError('');
+                  } else {
+                    setMasterPinError('غلط ماسٹر پن کوڈ درج کیا گیا ہے! فوزیہ کلاؤڈ رجسٹریشن پاس ورڈ درج کریں یا لائسنس کے لیے ڈویلپر سے رابطہ کریں: 0300-8885072');
+                  }
+                }}
+                className="space-y-3"
+              >
+                <div>
+                  <label className="block text-xs font-bold text-stone-700 mb-1">ماسٹر چابی پن کوڈ (Master Pin) :</label>
+                  <input
+                    type="password"
+                    placeholder="••••••••••••"
+                    value={masterPinInput}
+                    onChange={(e) => setMasterPinInput(e.target.value)}
+                    className="w-full p-2.5 border-2 border-stone-200 rounded-lg text-xs tracking-widest font-mono text-center outline-none focus:border-rose-600"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-2 font-sans pt-1">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-rose-650 hover:bg-rose-700 text-white font-bold text-xs py-2 rounded-lg cursor-pointer text-center shadow"
+                  >
+                    پن کوڈ کی تصدیق کریں
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPinPromptOpen(false);
+                      setMasterPinInput('');
+                      setMasterPinError('');
+                    }}
+                    className="flex-1 bg-stone-100 hover:bg-stone-200 text-stone-700 border text-xs py-2 rounded-lg cursor-pointer text-center"
+                  >
+                    منسوخ کریں
+                  </button>
+                </div>
+              </form>
+
+              <div className="pt-2 border-t text-center text-[10px] text-stone-400">
+                رابطہ برائے رجسٹریشن پن کوڈ: <strong>03008885072</strong>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -743,6 +1617,9 @@ export default function App() {
             setCurrencySymbol={setCurrencySymbol}
             taxRate={taxRate}
             setTaxRate={setTaxRate}
+            currentTenantId={currentTenantId}
+            tenants={tenants}
+            onUpdateTenantProfile={handleUpdateTenantProfile}
           />
         )}
 
@@ -774,6 +1651,9 @@ export default function App() {
             setCurrencySymbol={setCurrencySymbol}
             taxRate={taxRate}
             setTaxRate={setTaxRate}
+            currentTenantId={currentTenantId}
+            tenants={tenants}
+            onUpdateTenantProfile={handleUpdateTenantProfile}
           />
         )}
 
@@ -805,6 +1685,14 @@ export default function App() {
         </div>
         
         <div className="flex gap-2.5 items-center">
+          <button 
+            onClick={() => setIsAdminAuthModalOpen(true)}
+            className="bg-[#1e40af]/10 hover:bg-[#1e40af]/15 text-[#1e40af] hover:text-[#1d4ed8] border border-stone-200 text-[10.5px] font-bold px-2.5 py-0.5 rounded flex items-center gap-1 transition-all cursor-pointer shadow-sm font-sans"
+            title="SaaS Admin Suite Control Board"
+          >
+            <Lock className="w-3 h-3" />
+            <span>ایڈمن پینل (Admin)</span>
+          </button>
           <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-250 flex items-center gap-1.5 text-xs">
             <span className="font-sans font-bold">آپریٹر سیشن:</span>
             <span className="font-mono font-bold text-emerald-900">{username}</span>
@@ -812,6 +1700,693 @@ export default function App() {
           <span style={{ fontSize: '11px' }} className="font-mono text-stone-400">Version 1.11.0</span>
         </div>
       </footer>
+
+      {/* 1. SECURE ADMIN PIN AUTHENTICATION MODAL */}
+      {isAdminAuthModalOpen && (
+        <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-right" dir="rtl">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-6 border-4 border-[#8DB600] shadow-2xl space-y-4">
+            <div className="flex justify-between items-start">
+              <h4 className="text-base font-black text-stone-900 flex items-center gap-1.5 font-sans">
+                <Lock className="w-5 h-5 text-[#8DB600]" />
+                ایڈمنسٹریٹر لاگ ان
+              </h4>
+              <button 
+                onClick={() => {
+                  setIsAdminAuthModalOpen(false);
+                  setAdminPinInput('');
+                  setAdminPinError('');
+                }}
+                className="text-stone-400 hover:text-stone-600 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-stone-600 leading-relaxed font-sans">
+              سافٹ ویئر کے خفیہ ساس کنٹرول پینل تک رسائی کیلئے سیکورٹی پن کوڈ درج کریں (پاس ورڈ: Fozia@sif1234)۔
+            </p>
+
+            {adminPinError && (
+              <div className="bg-rose-50 border border-rose-200 text-rose-800 p-2 text-xs rounded-lg font-bold">
+                {adminPinError}
+              </div>
+            )}
+
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (adminPinInput === 'Fozia@sif1234') {
+                  setIsAdminAuthModalOpen(false);
+                  setAdminPinInput('');
+                  setAdminPinError('');
+                  setIsAdminPanelOpen(true);
+                } else {
+                  setAdminPinError('غلط ماسٹر پن کوڈ درج کیا گیا ہے!');
+                }
+              }}
+              className="space-y-3"
+            >
+              <div className="space-y-1">
+                <label className="block text-xs font-bold text-stone-700">ماسٹر پن کوڈ (PIN) :</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  value={adminPinInput}
+                  onChange={(e) => setAdminPinInput(e.target.value)}
+                  className="w-full p-2.5 border-2 border-stone-200 rounded-lg text-center font-mono focus:border-[#8DB600] outline-none text-stone-950"
+                  required
+                  autoFocus
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-[#8DB600] text-white font-bold py-2 rounded-lg text-xs cursor-pointer shadow hover:bg-[#7BA100] transition-all"
+              >
+                پن کوڈ کی تصدیق کریں
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 2. FULL-SCREEN SAAS ADMIN PANEL CONTROL BOARD Overlay */}
+      {isAdminPanelOpen && (
+        <div className="fixed inset-0 bg-stone-100 z-50 overflow-y-auto p-4 md:p-8 font-sans text-right" dir="rtl">
+          <div className="max-w-6xl mx-auto space-y-6">
+            
+            {/* Top Admin Header */}
+            <div className="bg-white p-6 rounded-2xl border border-stone-200 shadow-sm flex flex-col md:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-blue-50 text-blue-800 rounded-xl">
+                  <ShieldCheck className="w-8 h-8" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-black text-stone-900 leading-none">ساس کلاؤڈ ایڈمن پینل (SaaS Administration)</h2>
+                  <p className="text-xs text-stone-500 font-medium mt-1">تمام منڈی اداروں کی رجسٹریشن، سبسکرپشنز، اور لوکل بیک اپس کا مکمل کنٹرول</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsNewTenantFormOpen(!isNewTenantFormOpen)}
+                  className="bg-[#8DB600] hover:bg-[#7BA100] text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>نیا ادارہ لاؤنچ کریں</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setIsAdminPanelOpen(false);
+                    setEditingTenantId(null);
+                  }}
+                  className="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow"
+                >
+                  <X className="w-4 h-4" />
+                  <span>ایڈمن پینل بند کریں</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Ecosystem Overview stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded-xl border border-stone-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-stone-400 font-bold block">کل رجسٹرڈ کمپنیاں</span>
+                  <span className="text-2xl font-mono font-black text-stone-800 mt-1 block">{tenants.length}</span>
+                </div>
+                <div className="p-2 bg-stone-100 text-stone-600 rounded-lg">
+                  <Building className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-[#8DB600]/30 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-[#8DB600] font-bold block">فعال سبسکرپشنز</span>
+                  <span className="text-2xl font-mono font-black text-emerald-700 mt-1 block">
+                    {tenants.filter(t => t.status === 'active').length}
+                  </span>
+                </div>
+                <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-orange-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-orange-600 font-bold block">ٹرائل کی مدت پر</span>
+                  <span className="text-2xl font-mono font-black text-orange-700 mt-1 block">
+                    {tenants.filter(t => t.status === 'trial').length}
+                  </span>
+                </div>
+                <div className="p-2 bg-orange-50 text-orange-600 rounded-lg">
+                  <Info className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-xl border border-rose-200 shadow-sm flex items-center justify-between">
+                <div>
+                  <span className="text-xs text-rose-600 font-bold block">پلان زائد المیعاد</span>
+                  <span className="text-2xl font-mono font-black text-rose-700 mt-1 block">
+                    {tenants.filter(t => t.status === 'expired').length}
+                  </span>
+                </div>
+                <div className="p-2 bg-rose-550 text-rose-600 rounded-lg">
+                  <X className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Create New SaaS Tenant Section */}
+            {isNewTenantFormOpen && (
+              <div className="bg-white p-6 rounded-2xl border-2 border-[#8DB600] shadow-md space-y-4 animate-in slide-in-from-top-4 duration-200">
+                <h3 className="text-base font-black text-[#8DB600] flex items-center gap-1 border-b pb-2">
+                  <Plus className="w-5 h-5" />
+                  <span>نیا بادل منڈی ادارہ لاؤنچ کریں (Create New SaaS Tenant)</span>
+                </h3>
+                
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const generatedId = `COMP-${Date.now()}`;
+                    const generatedLicense = `MK-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}-${Math.floor(1000 + Math.random() * 9000)}`;
+                    
+                    const newCompanyObj: RegisteredCompany = {
+                      companyId: generatedId,
+                      companyName: newTenantForm.companyName.trim(),
+                      businessType: newTenantForm.businessType,
+                      address: newTenantForm.address.trim(),
+                      city: newTenantForm.city.trim(),
+                      country: 'پاکستان',
+                      ownerName: newTenantForm.ownerName.trim(),
+                      ownerPhone: newTenantForm.ownerPhone.trim(),
+                      emailAddress: newTenantForm.emailAddress.trim(),
+                      username: newTenantForm.username.trim() || `user_${Date.now().toString().slice(-4)}`,
+                      passwordConfirm: newTenantForm.passwordConfirm.trim() || '1234',
+                      subscriptionPlan: newTenantForm.plan,
+                      subscriptionCode: generatedLicense,
+                      createdAt: new Date().toISOString().split('T')[0],
+                      licenseCode: generatedLicense,
+                      activationDate: new Date().toISOString().split('T')[0],
+                      expiryDate: new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().split('T')[0], // 30 days
+                      plan: newTenantForm.plan,
+                      status: newTenantForm.status as any,
+                      preferredLanguage: 'Urdu',
+                      preferredCurrency: 'PKR',
+                    };
+
+                    setTenants(prev => [...prev, newCompanyObj]);
+                    alert(`نیا دورانیے کا ادارہ "${newCompanyObj.companyName}" کامیابی سے لاؤنچ کر دیا گیا ہے۔`);
+                    
+                    // reset
+                    setNewTenantForm({
+                      companyName: '',
+                      businessType: 'Sabzi Mandi Commission Agent',
+                      address: '',
+                      city: '',
+                      ownerName: '',
+                      ownerPhone: '',
+                      emailAddress: '',
+                      username: '',
+                      passwordConfirm: '',
+                      plan: 'Trial',
+                      status: 'trial'
+                    });
+                    setIsNewTenantFormOpen(false);
+                  }}
+                  className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs text-stone-950"
+                >
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">نام ادارہ / کمپنی کا نام * :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.companyName}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, companyName: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      required
+                      placeholder="مثال: ممتاز آتھ اینڈ سنز"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">کاروبار کی قسم * :</label>
+                    <select
+                      value={newTenantForm.businessType}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, businessType: e.target.value})}
+                      className="w-full p-2 border rounded-md h-9"
+                    >
+                      <option value="Sabzi Mandi Commission Agent">سبزی منڈی کمیشن ایجنٹ</option>
+                      <option value="Wholesaler">تھوک فروش (Wholesaler)</option>
+                      <option value="Retailer">پرچون فروش (Retailer)</option>
+                      <option value="Trader">تاجر (Trader)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">مالک کا نام * :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.ownerName}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, ownerName: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      required
+                      placeholder="مثال: حاجی مقبول حسین"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">موبائل / واٹس ایپ نمبر * :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.ownerPhone}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, ownerPhone: e.target.value})}
+                      className="w-full p-2 border rounded-md text-left font-sans text-stone-950"
+                      required
+                      placeholder="03001234567"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">ای میل ایڈریس :</label>
+                    <input
+                      type="email"
+                      value={newTenantForm.emailAddress}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, emailAddress: e.target.value})}
+                      className="w-full p-2 border rounded-md text-left text-stone-950"
+                      placeholder="info@mandi.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">شہر کا نام :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.city}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, city: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      placeholder="لودھراں"
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <label className="block font-bold mb-1 text-stone-700">دکان یا گلہ کا مکمل پتہ :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.address}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, address: e.target.value})}
+                      className="w-full p-2 border rounded-md"
+                      placeholder="سبزی منڈی شاپ نمبر 14، غلہ منڈی روڈ"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">لاگ ان صارف کا نام (Username) * :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.username}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, username: e.target.value})}
+                      className="w-full p-2 border rounded-md text-left font-sans text-stone-950"
+                      required
+                      placeholder="mandi_agent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">لاگ ان پاس ورڈ کوڈ * :</label>
+                    <input
+                      type="text"
+                      value={newTenantForm.passwordConfirm}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, passwordConfirm: e.target.value})}
+                      className="w-full p-2 border rounded-md text-left font-sans text-stone-950"
+                      required
+                      placeholder="1234"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold mb-1 text-stone-700">بادل لائسنس پلان :</label>
+                    <select
+                      value={newTenantForm.plan}
+                      onChange={(e) => setNewTenantForm({...newTenantForm, plan: e.target.value})}
+                      className="w-full p-2 border rounded-md h-9 text-stone-950"
+                    >
+                      <option value="Trial">مفت ٹرائل (30 دن)</option>
+                      <option value="Basic">بنیادی سروس (Basic)</option>
+                      <option value="Premium">پریمیم کلاؤڈ (Premium)</option>
+                    </select>
+                  </div>
+
+                  <div className="md:col-span-3 flex justify-end gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsNewTenantFormOpen(false)}
+                      className="bg-stone-200 hover:bg-stone-300 text-stone-800 px-4 py-2 rounded-lg cursor-pointer"
+                    >
+                      منسوخ کریں
+                    </button>
+                    <button
+                      type="submit"
+                      className="bg-[#8DB600] hover:bg-[#7BA100] text-white px-5 py-2 rounded-lg font-bold cursor-pointer"
+                    >
+                      بادل اکاؤنٹ چالو کریں
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+            {/* Tenants Management Table Core Display */}
+            <div className="bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden text-stone-800">
+              <div className="p-4 bg-stone-50 border-b border-stone-200 font-bold text-stone-700 text-xs text-right">
+                رجسٹرڈ کمپنیوں کا ڈیٹا مینیجر (SaaS Tenants Ledger)
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-right text-xs">
+                  <thead>
+                    <tr className="bg-stone-100 border-b border-stone-200 text-stone-600">
+                      <th className="p-3 text-right">ادارے کا نام و لوکیشن</th>
+                      <th className="p-3 text-right">مالک و واٹس ایپ</th>
+                      <th className="p-3 text-right">صارف کریڈنشلز</th>
+                      <th className="p-3 text-right">پلان اور لائسنس کی</th>
+                      <th className="p-3 text-right">معیاد</th>
+                      <th className="p-3 text-center">انتظامی کنٹرولز</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-stone-150">
+                    {tenants.map(t => {
+                      const isEditing = editingTenantId === t.companyId;
+                      return (
+                        <tr key={t.companyId} className="hover:bg-stone-50">
+                          
+                          {/* Company Branding details */}
+                          <td className="p-3 text-right">
+                            {isEditing && editingTenantData ? (
+                              <div className="space-y-1.5 max-w-xs text-stone-950">
+                                <input
+                                  type="text"
+                                  value={editingTenantData.companyName}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, companyName: e.target.value})}
+                                  className="p-1 border text-xs w-full rounded"
+                                  required
+                                />
+                                <input
+                                  type="text"
+                                  value={editingTenantData.address}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, address: e.target.value})}
+                                  className="p-1 border text-xs w-full rounded"
+                                  placeholder="ایڈریس"
+                                />
+                                <input
+                                  type="text"
+                                  value={editingTenantData.city}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, city: e.target.value})}
+                                  className="p-1 border text-xs w-full rounded"
+                                  placeholder="شہر"
+                                />
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="font-bold text-stone-950 block">{t.companyName}</span>
+                                <span className="text-[10px] text-stone-550 block mt-0.5">{t.address}، {t.city}</span>
+                                <span className="bg-stone-100 text-stone-600 px-1.5 py-0.2 rounded-full text-[9px] font-black inline-block mt-1 font-sans">{t.businessType}</span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Owner details */}
+                          <td className="p-3 text-right">
+                            {isEditing && editingTenantData ? (
+                              <div className="space-y-1 max-w-xs text-stone-950">
+                                <input
+                                  type="text"
+                                  value={editingTenantData.ownerName}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, ownerName: e.target.value})}
+                                  className="p-1 border text-[11px] w-full rounded"
+                                  placeholder="مالک کا نام"
+                                />
+                                <input
+                                  type="text"
+                                  value={editingTenantData.ownerPhone}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, ownerPhone: e.target.value})}
+                                  className="p-1 border text-[11px] w-full rounded text-left font-sans"
+                                  placeholder="موبائل"
+                                />
+                              </div>
+                            ) : (
+                              <div>
+                                <span className="font-bold text-stone-850 block">{t.ownerName}</span>
+                                <span className="text-stone-600 block font-mono text-[10.5px] mt-0.5">{t.ownerPhone}</span>
+                                <span className="text-stone-450 text-[10px] block font-mono">{t.emailAddress || 'ای میل دستیاب نہیں'}</span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Credentials */}
+                          <td className="p-3 text-right">
+                            {isEditing && editingTenantData ? (
+                              <div className="space-y-1.5 max-w-xs font-sans text-stone-950">
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] text-stone-500">یوزر:</span>
+                                  <input
+                                    type="text"
+                                    value={editingTenantData.username}
+                                    onChange={(e) => setEditingTenantData({...editingTenantData, username: e.target.value})}
+                                    className="p-1 border text-xs rounded text-left font-mono"
+                                    required
+                                  />
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[10px] text-stone-500">پاس:</span>
+                                  <input
+                                    type="text"
+                                    value={editingTenantData.passwordConfirm}
+                                    onChange={(e) => setEditingTenantData({...editingTenantData, passwordConfirm: e.target.value})}
+                                    className="p-1 border text-xs rounded text-left font-mono"
+                                    required
+                                  />
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="font-sans text-[11px] bg-stone-50 p-2 rounded-lg border border-stone-205 text-stone-850">
+                                <div className="flex items-center justify-between text-stone-550">
+                                  <span>یوزر:</span>
+                                  <span className="font-mono font-bold text-stone-900 text-left">{t.username}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-stone-550 mt-1">
+                                  <span>پاس کوڈ:</span>
+                                  <span className="font-mono font-bold text-stone-900 text-left">{t.passwordConfirm}</span>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Subscription plan details */}
+                          <td className="p-3 font-sans text-right">
+                            {isEditing && editingTenantData ? (
+                              <div className="space-y-1.5 text-stone-950">
+                                <select
+                                  value={editingTenantData.plan}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, plan: e.target.value})}
+                                  className="p-1 border text-xs w-full rounded font-sans"
+                                >
+                                  <option value="Trial">Trial</option>
+                                  <option value="Basic">Basic</option>
+                                  <option value="Premium">Premium</option>
+                                </select>
+                                <select
+                                  value={editingTenantData.status}
+                                  onChange={(e) => setEditingTenantData({...editingTenantData, status: e.target.value as any})}
+                                  className="p-1 border text-xs w-full rounded font-sans"
+                                >
+                                  <option value="trial">Trial</option>
+                                  <option value="active">Active</option>
+                                  <option value="expired">Expired</option>
+                                </select>
+                              </div>
+                            ) : (
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`px-2 py-0.5 rounded text-[9.5px] font-black uppercase text-white ${
+                                    t.status === 'active' ? 'bg-emerald-600' : t.status === 'trial' ? 'bg-orange-500' : 'bg-red-650'
+                                  }`}>
+                                    {t.status === 'active' ? 'ACTIVE' : t.status === 'trial' ? 'TRIAL' : 'EXPIRED'}
+                                  </span>
+                                  <span className="text-stone-700 font-bold text-[10.5px]">{t.plan} Plan</span>
+                                </div>
+                                <span className="text-[10px] text-stone-450 block mt-1.5 font-mono select-all">لائسنس: {t.licenseCode}</span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Expiry dates */}
+                          <td className="p-3 font-mono text-[11px] text-right">
+                            {isEditing && editingTenantData ? (
+                              <input
+                                type="date"
+                                value={editingTenantData.expiryDate}
+                                onChange={(e) => setEditingTenantData({...editingTenantData, expiryDate: e.target.value})}
+                                className="p-1 border text-xs rounded font-mono text-stone-950"
+                              />
+                            ) : (
+                              <div className="space-y-0.5 text-stone-800">
+                                <span className="block text-stone-750 font-sans">تک رسائی: {t.expiryDate}</span>
+                                <span className="block text-[9.5px] text-stone-455 font-sans">چالو کیا: {t.activationDate}</span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Administration Controls Grid */}
+                          <td className="p-3 text-center">
+                            {isEditing && editingTenantData ? (
+                              <div className="flex justify-center gap-1.5">
+                                <button
+                                  onClick={() => {
+                                    // Save changes and update tenants master state
+                                    setTenants(prev => prev.map(item => item.companyId === t.companyId ? editingTenantData : item));
+                                    setEditingTenantId(null);
+                                    setEditingTenantData(null);
+                                    alert('ادارے کی ترتیبات کامیابی سے اپڈیٹ کر دی گئی ہیں۔');
+                                  }}
+                                  className="bg-emerald-650 hover:bg-emerald-700 text-white px-2 py-1 rounded font-bold text-[10.5px] cursor-pointer"
+                                >
+                                  محفوظ کریں
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingTenantId(null);
+                                    setEditingTenantData(null);
+                                  }}
+                                  className="bg-stone-300 hover:bg-stone-400 text-stone-800 px-2 py-1 rounded text-[10.5px] cursor-pointer"
+                                >
+                                  کینسل
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="grid grid-cols-2 lg:flex lg:flex-row gap-1 justify-center">
+                                
+                                {/* Edit configuration button */}
+                                <button
+                                  onClick={() => {
+                                    setEditingTenantId(t.companyId);
+                                    setEditingTenantData({...t});
+                                  }}
+                                  className="bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-2 py-1 rounded text-[10.5px] font-bold cursor-pointer transition-all font-sans"
+                                  title="ادارے کی تفصیلات ترمیم کریں"
+                                >
+                                  ترمیم
+                                </button>
+
+                                {/* Live switch workspace to their own setups */}
+                                <button
+                                  onClick={() => {
+                                    setCurrentTenantId(t.companyId);
+                                    setIsAuthenticated(true);
+                                    setUsername(t.ownerName);
+                                    setIsAdminPanelOpen(false);
+                                    setCurrentTab('dashboard');
+                                    alert(`اب آپ کا ورک اسپیس "${t.companyName}" پر سوئچ ہو گیا ہے۔ اس کمپنی کا اپنا سیٹ اب دیکھیں۔`);
+                                  }}
+                                  className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-250 px-2 py-1 rounded text-[10.5px] font-bold cursor-pointer transition-all font-sans"
+                                  title="اس کمپنی کی کلاؤڈ ورک اسپیس پر سوئچ کریں"
+                                >
+                                  ورک اسپیس سوئچ
+                                </button>
+
+                                {/* Download Backup for specific Tenant */}
+                                <button
+                                  onClick={() => {
+                                    const tenantId = t.companyId;
+                                    const backupObj = {
+                                      accounts: JSON.parse(localStorage.getItem(`mm_${tenantId}_accounts`) || '[]'),
+                                      invoices: JSON.parse(localStorage.getItem(`mm_${tenantId}_invoices`) || '[]'),
+                                      purchases: JSON.parse(localStorage.getItem(`mm_${tenantId}_purchases`) || '[]'),
+                                      receipts: JSON.parse(localStorage.getItem(`mm_${tenantId}_receipts`) || '[]'),
+                                      payments: JSON.parse(localStorage.getItem(`mm_${tenantId}_payments`) || '[]'),
+                                      expenses: JSON.parse(localStorage.getItem(`mm_${tenantId}_expenses`) || '[]'),
+                                      journals: JSON.parse(localStorage.getItem(`mm_${tenantId}_journals`) || '[]'),
+                                      reminders: JSON.parse(localStorage.getItem(`mm_${tenantId}_reminders`) || '[]')
+                                    };
+                                    
+                                    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupObj, null, 2));
+                                    const downloadAnchor = document.createElement('a');
+                                    downloadAnchor.setAttribute("href", dataStr);
+                                    
+                                    const cleanCompName = t.companyName ? t.companyName.trim().replace(/\s+/g, '_') : 'MandiKhata';
+                                    const formattedDate = new Date().toISOString().split('T')[0];
+                                    downloadAnchor.setAttribute("download", `companyregistration_${cleanCompName}_${formattedDate}.json`);
+                                    
+                                    document.body.appendChild(downloadAnchor);
+                                    downloadAnchor.click();
+                                    downloadAnchor.remove();
+                                  }}
+                                  className="bg-stone-50 hover:bg-stone-150 text-stone-700 border border-stone-250 px-2 py-1 rounded text-[10.5px] font-bold cursor-pointer transition-all flex items-center gap-1 justify-center font-sans"
+                                  title="اس کمپنی کے تمام ریکارڈز کا کلاؤڈ سورس ڈیٹا بیک اپ ڈاؤن لوڈ کریں"
+                                >
+                                  <HardDriveDownload className="w-3 h-3 text-stone-600" />
+                                  <span>بیک اپ</span>
+                                </button>
+
+                                {/* Hard factory reset only for this workspace */}
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`کیا آپ واقعی کمپنی "${t.companyName}" کا تمام ریکارڈ اور لیجر ڈیٹا مٹانا چاہتے ہیں؟ یہ عمل ناقابل واپسی ہے۔`)) {
+                                      const tenantId = t.companyId;
+                                      localStorage.removeItem(`mm_${tenantId}_accounts`);
+                                      localStorage.removeItem(`mm_${tenantId}_invoices`);
+                                      localStorage.removeItem(`mm_${tenantId}_purchases`);
+                                      localStorage.removeItem(`mm_${tenantId}_receipts`);
+                                      localStorage.removeItem(`mm_${tenantId}_payments`);
+                                      localStorage.removeItem(`mm_${tenantId}_expenses`);
+                                      localStorage.removeItem(`mm_${tenantId}_journals`);
+                                      localStorage.removeItem(`mm_${tenantId}_reminders`);
+                                      alert('اس کمپنی کا ڈیٹا بیس کامیابی سے فیکٹری ری سیٹ کر دیا گیا ہے۔');
+                                    }
+                                  }}
+                                  className="bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-205 px-1.5 py-1 rounded text-[10.5px] font-bold cursor-pointer transition-all font-sans"
+                                  title="لوکل کھاتہ خالی کریں"
+                                >
+                                  ری سیٹ
+                                </button>
+
+                                {/* Delete permanently */}
+                                <button
+                                  onClick={() => {
+                                    if (confirm(`کیا آپ واقعی کمپنی "${t.companyName}" کا ساس فلیٹ اکاؤنٹ مستقل طور پر حذف کرنا چاہتے ہیں؟`)) {
+                                      setTenants(prev => prev.filter(item => item.companyId !== t.companyId));
+                                      alert('کمپنی کا ساس رجسٹریشن کامیابی سے حذف کر دیا گیا ہے۔');
+                                    }
+                                  }}
+                                  className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-1.5 py-1 rounded text-[10.5px] font-bold cursor-pointer transition-all font-sans"
+                                  title="ساس لسٹ سے کمپنی ہٹائیں"
+                                >
+                                  حذف
+                                </button>
+
+                              </div>
+                            )}
+                          </td>
+
+                        </tr>
+                      );
+                    })}
+                    {tenants.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="p-8 text-center text-stone-400 font-bold">
+                          کوئی بھی ساس کمپنی رجسٹرڈ نہیں ہے۔ پہلی کمپنی لاؤنچ کرنے کیلئے اوپر "نیا ادارہ لاؤنچ کریں" پر کلک کریں۔
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+            
+            {/* Informational Guidelines in Urdu */}
+            <div className="bg-[#1e40af]/5 p-4 rounded-xl border border-[#1e40af]/15 text-xs text-[#1e40af]/90 leading-relaxed font-sans space-y-1">
+              <h4 className="font-bold flex items-center gap-1">
+                <Info className="w-4 h-4" />
+                <span>ایڈمنسٹریٹر ہدایات برائے ساس لائسنس کنٹرول:</span>
+              </h4>
+              <p>1۔ جب بھی کوئی نیا بادل ادارہ لاگ ان ہوتا ہے تو منڈی کھاتہ انجن اس ادارے کے برانڈ نام، گلہ روڈ لوکیشن، اور فون واٹس ایپ کی تمام فیلڈز کو خودکار طریقے سے اپڈیٹ اور باہم پیوند کر دیتا ہے۔</p>
+              <p>2۔ "بیک اپ" بٹن سے حاصل کردہ فائل کا نام قانون کے مطابق <strong>companyregistration_Companyname_date.json</strong> کی درست معتبر فارمیٹ میں ہی ڈاؤن لوڈ ہو گا، جو کہ آپ کلوڈ ریکارڈ یا ری اسٹور کیلئے محفوظ کر سکتے ہیں۔</p>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }
