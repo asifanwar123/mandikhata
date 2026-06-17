@@ -1162,7 +1162,7 @@ export default function App() {
                       placeholder="اپنا صارف نام درج کریں..."
                       value={enteredUsername}
                       onChange={(e) => setEnteredUsername(e.target.value)}
-                      className="w-full p-3 border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-sans text-stone-800"
+                      className="w-full p-3 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-sans text-stone-800"
                       required
                     />
                     <User className="w-4 h-4 text-stone-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -1177,7 +1177,7 @@ export default function App() {
                       placeholder="سیکورٹی پن کوڈ درج کریں..."
                       value={enteredPassword}
                       onChange={(e) => setEnteredPassword(e.target.value)}
-                      className="w-full p-3 pl-14 border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-mono text-stone-900"
+                      className="w-full p-3 pl-14 h-[70px] border-2 border-stone-200 rounded-xl text-xs outline-none focus:border-blue-600 text-left font-mono text-stone-900"
                       required
                     />
                     {/* The SHOW/HIDE toggle perfectly replicated from the Sign In mockup image! */}
@@ -1188,7 +1188,7 @@ export default function App() {
                     >
                       {showPassword ? 'چھپائیں' : 'دکھائیں'}
                     </button>
-                    <Key className="w-4 h-4 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
+                    <Key className="w-4 h-4 ml-0 pl-0 text-stone-400 absolute right-3 top-1/2 -translate-y-1/2" />
                   </div>
                 </div>
 
