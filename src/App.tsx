@@ -7,7 +7,7 @@ import ReceiptPaymentManager from './components/ReceiptPaymentManager';
 import LedgerViewer from './components/LedgerViewer';
 import ReportsViewer from './components/ReportsViewer';
 import BackupCalendarManager from './components/BackupCalendarManager';
-import FloatingAdsSlider from './components/FloatingAdsSlider';
+import FooterBanner from './components/FooterBanner';
 
 import { Account, MarketInvoice, PurchaseInvoice, CollectionReceipt, PaymentVoucher, ExpenseRecord, JournalEntry, PromiseReminder, UserRole } from './types';
 import { 
@@ -1664,12 +1664,8 @@ export default function App() {
 
       {/* FIXED CLASSIC DESKTOP FOOTER SCREEN STATUS BAR */}
       <footer className="fixed bottom-0 left-0 right-0 min-h-[40px] md:h-10 py-1.5 md:py-0 bg-white border-t border-stone-200 shadow no-print flex flex-col md:flex-row justify-between items-center px-4 text-stone-500 font-sans select-none z-40 gap-1.5 md:gap-0">
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 items-center">
-          <span className="flex items-center gap-1.5">
-            <span style={{ fontSize: '16px' }} className="font-sans font-bold text-stone-800">ڈویلپر فون :</span>
-            <span style={{ fontSize: '16px', fontWeight: 'bold' }} className="font-sans">03026834300 | 03008885072</span>
-          </span>
-        </div>
+        
+        <FooterBanner />
         
         <div style={{ fontSize: '18px', fontWeight: 'bold' }} className="flex gap-2.5 items-center">
           <button 
@@ -1680,11 +1676,7 @@ export default function App() {
             <Lock className="w-3 h-3" />
             <span>ایڈمن پینل (Admin)</span>
           </button>
-          <span style={{ fontSize: '15px' }} className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded border border-emerald-250 flex items-center gap-1.5">
-            <span className="font-sans font-bold">آپریٹر سیشن:</span>
-            <span className="font-mono font-bold text-emerald-900">{username}</span>
-          </span>
-          <span style={{ fontSize: '11px' }} className="font-mono text-stone-400">Version 1.11.0</span>
+
         </div>
       </footer>
 
@@ -2390,7 +2382,7 @@ export default function App() {
           </div>
         </div>
       )}
-      <FloatingAdsSlider />
+
     </div>
   );
 }
