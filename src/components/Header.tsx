@@ -64,8 +64,8 @@ export default function Header({
 
         {/* Visually Center Area in RTL: Business Branding with Jameel Noori Nastaleeq */}
         <div 
-          style={{ marginLeft: '220px', width: '500px', height: '85px', paddingRight: '10px' }}
-          className="text-right my-4 md:my-0 flex flex-col items-start justify-center"
+          style={{ width: '600px', height: '100px', marginLeft: '630px', paddingRight: '10px' }}
+          className="text-right my-4 md:my-0 flex flex-col items-start justify-center pr-4"
         >
           <div className="flex flex-wrap items-center justify-start gap-3 mb-1">
             <h1 
