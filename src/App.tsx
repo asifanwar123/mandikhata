@@ -221,6 +221,7 @@ export default function App() {
   // Current Navigation Tab Control (Top Navigation)
   // Options: 'dashboard', 'accounts_related', 'mandi_trade', 'reports', 'decisions', 'open_files', 'exit'
   const [currentTab, setCurrentTab] = useState<string>('dashboard');
+  const [reportsInitialReport, setReportsInitialReport] = useState<'trial' | 'pl' | 'cash_book' | 'receivables' | 'payables' | 'sales_report' | 'group_receivables' | 'bill_details' | 'summary_details'>('trial');
 
   // Currently focused sub-module within active tab
   const [activeSubModule, setActiveSubModule] = useState<string>('');
@@ -590,13 +591,16 @@ export default function App() {
       setCurrentTab('mandi_trade');
       setActiveSubModule('sale');
     } else if (tileId === 'receivable_details') {
+      setReportsInitialReport('receivables');
       setCurrentTab('reports');
     } else if (tileId === 'bill_details') {
-      setCurrentTab('mandi_trade');
-      setActiveSubModule('sale');
+      setReportsInitialReport('bill_details');
+      setCurrentTab('reports');
     } else if (tileId === 'group_receivables') {
+      setReportsInitialReport('group_receivables');
       setCurrentTab('reports');
     } else if (tileId === 'summary_details') {
+      setReportsInitialReport('summary_details');
       setCurrentTab('reports');
     } else if (tileId === 'chart_accounts') {
       setCurrentTab('accounts_related');
@@ -1613,6 +1617,13 @@ export default function App() {
                 onAddAccount={handleAddAccount}
                 onEditAccount={handleEditAccount}
                 onDeleteAccount={handleDeleteAccount}
+                journals={journals}
+                receipts={receipts}
+                payments={payments}
+                invoices={invoices}
+                purchases={purchases}
+                onAddReminder={handleAddReminder}
+                onClose={() => { setActiveSubModule(''); setCurrentTab('dashboard'); }}
               />
             )}
             {activeSubModule === 'supplier' && (
@@ -1622,6 +1633,13 @@ export default function App() {
                 onAddAccount={handleAddAccount}
                 onEditAccount={handleEditAccount}
                 onDeleteAccount={handleDeleteAccount}
+                journals={journals}
+                receipts={receipts}
+                payments={payments}
+                invoices={invoices}
+                purchases={purchases}
+                onAddReminder={handleAddReminder}
+                onClose={() => { setActiveSubModule(''); setCurrentTab('dashboard'); }}
               />
             )}
             {activeSubModule === 'receipt' && (
@@ -1665,6 +1683,9 @@ export default function App() {
                 accounts={accounts}
                 journals={journals}
                 initialSelectedAccountId={selectedLedgerAccountId}
+                invoices={invoices}
+                purchases={purchases}
+                onClose={() => { setActiveSubModule(''); setCurrentTab('dashboard'); }}
               />
             )}
             {activeSubModule === 'accounts_directory' && (
@@ -1859,8 +1880,8 @@ export default function App() {
                 {/* Account Add/Edit Modal Window popup */}
                 {showAccountForm && (
                   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-right animate-in fade-in duration-200" dir="rtl">
-                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 text-right font-sans">
-                      <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center">
+                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 text-right font-sans flex flex-col max-h-[85vh] overflow-hidden">
+                      <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center shrink-0">
                         <span className="font-bold text-sm">
                           {isAccountEditMode ? 'ترمیم کھاتہ فرم (Edit Chart of Account)' : 'نیا کھاتہ مندرجہ فرم (New Chart of Account)'}
                         </span>
@@ -1910,7 +1931,7 @@ export default function App() {
                           }
                           setShowAccountForm(false);
                         }} 
-                        className="p-4 space-y-3 box-border text-xs"
+                        className="p-4 space-y-3 box-border text-xs overflow-y-auto"
                       >
                         <div className="grid grid-cols-2 gap-3">
                           <div>
@@ -2167,6 +2188,8 @@ export default function App() {
             payments={payments}
             expenses={expenses}
             journals={journals}
+            initialReport={reportsInitialReport}
+            onClose={() => setCurrentTab('dashboard')}
           />
         )}
 
