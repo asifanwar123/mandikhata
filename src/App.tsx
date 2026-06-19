@@ -17,7 +17,7 @@ import {
   INITIAL_JOURNAL, INITIAL_WADAY 
 } from './utils/initialData';
 
-import { Lock, Unlock, HelpCircle, HardDriveDownload, Building, User, Mail, FileText, CheckCircle2, Key, CreditCard, Globe, Award, ShieldCheck, DollarSign, Smartphone, Plus, X, ChevronRight, Info, Sparkles, Copy, Eye, EyeOff, Printer, Download } from 'lucide-react';
+import { Lock, Unlock, HelpCircle, HardDriveDownload, Building, User, Mail, FileText, CheckCircle2, Key, CreditCard, Globe, Award, ShieldCheck, DollarSign, Smartphone, Plus, X, ChevronRight, Info, Sparkles, Copy, Eye, EyeOff, Printer, Download, Edit2, Trash2, Search } from 'lucide-react';
 
 export interface RegisteredCompany {
   companyId: string;
@@ -348,6 +348,48 @@ export default function App() {
     document.documentElement.dir = isUrdu ? 'rtl' : 'ltr';
     document.documentElement.lang = isUrdu ? 'ur' : 'en';
   }, [appLanguage]);
+
+  // Chart of Accounts (accounts_directory) state managers
+  const [showAccountForm, setShowAccountForm] = useState(false);
+  const [isAccountEditMode, setIsAccountEditMode] = useState(false);
+  const [accountEditingId, setAccountEditingId] = useState<string | null>(null);
+  const [accountFormData, setAccountFormData] = useState({
+    id: '',
+    name: '',
+    englishName: '',
+    type: 'Asset' as 'Asset' | 'Liability' | 'Revenue' | 'Expense' | 'Equity',
+    subType: 'Other',
+    openingBalance: 0,
+    openingType: 'Dr' as 'Dr' | 'Cr',
+    phone: '',
+    cnic: '',
+    address: '',
+    creditLimit: 150000,
+    notes: ''
+  });
+  const [accountSearchTerm, setAccountSearchTerm] = useState('');
+
+  const getCoANextAvailableId = (type: string) => {
+    let prefix = '1';
+    if (type === 'Asset') prefix = '1';
+    else if (type === 'Revenue') prefix = '2';
+    else if (type === 'Expense') prefix = '3';
+    else if (type === 'Liability') prefix = '5';
+    else if (type === 'Equity') prefix = '8';
+
+    const existingIds = accounts
+      .filter(acc => acc.id.startsWith(prefix) && acc.id.length === 5)
+      .map(acc => {
+        const parsed = parseInt(acc.id);
+        return isNaN(parsed) ? 0 : parsed;
+      });
+    
+    if (existingIds.length === 0) {
+      return `${prefix}0001`;
+    }
+    const maxVal = Math.max(...existingIds);
+    return String(maxVal + 1);
+  };
 
   // Auto-branding sync when currentTenantId shifts
   useEffect(() => {
@@ -1626,51 +1668,425 @@ export default function App() {
               />
             )}
             {activeSubModule === 'accounts_directory' && (
-              <div className="bg-white rounded-lg border p-4 space-y-4">
+              <div className="bg-white rounded-lg border p-4 space-y-4 text-right">
                 <div className="bg-[#8DB600] text-white p-3 rounded flex justify-between items-center">
                   <span className="font-bold text-sm">کل کھاتہ تالیف ڈائریکٹری (آفیشل توازن)</span>
                   <span className="font-mono text-xs">{accounts.length} اکاؤنٹس رجسٹرڈ</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
+                
+                {/* Control Panel: Buttons & Search */}
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 no-print">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
-                      className="flex items-center gap-1 bg-white text-[#7BA100] hover:bg-stone-50 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      onClick={() => {
+                        setIsAccountEditMode(false);
+                        const initialType = 'Asset';
+                        const nextId = getCoANextAvailableId(initialType);
+                        setAccountFormData({
+                          id: nextId,
+                          name: '',
+                          englishName: '',
+                          type: initialType,
+                          subType: 'Other',
+                          openingBalance: 0,
+                          openingType: 'Dr',
+                          phone: '',
+                          cnic: '',
+                          address: '',
+                          creditLimit: 150000,
+                          notes: ''
+                        });
+                        setAccountEditingId(null);
+                        setShowAccountForm(true);
+                      }}
+                      className="flex items-center gap-1 bg-white text-[#7BA100] hover:bg-stone-50 px-3 py-1.5 border border-stone-200 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
                     >
                       <Plus className="w-4 h-4" /> نیا کھاتہ درج کریں
                     </button>
                     <button 
                       onClick={() => window.print()}
-                      className="flex items-center gap-1 bg-[#7BA100] text-white hover:bg-[#688800] px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm border border-white/20"
+                      className="flex items-center gap-1 bg-[#7BA100] text-white hover:bg-[#688800] px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm border border-white/20"
                     >
                       <Printer className="w-4 h-4" /> پرنٹ فہرست
                     </button>
                     <button 
                       onClick={handleExportAccounts}
-                      className="flex items-center gap-1 bg-stone-700/80 text-white hover:bg-stone-800 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      className="flex items-center gap-1 bg-stone-700/80 text-white hover:bg-stone-800 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
                     >
                       <Download className="w-4 h-4" /> ایکسپورٹ ڈیٹا
                     </button>
+                  </div>
+
+                  <div className="relative w-full sm:max-w-md">
+                    <input
+                      type="text"
+                      placeholder="کھاتہ نمبر، نام، انگریزی نام یا نوعیت سے تلاش کریں..."
+                      value={accountSearchTerm}
+                      onChange={(e) => setAccountSearchTerm(e.target.value)}
+                      className="w-full pl-3 pr-10 py-1.5 text-xs text-stone-800 border-2 border-stone-300 rounded focus:border-[#8DB600] outline-none text-right placeholder-stone-400 font-sans"
+                    />
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2 px-0 py-0" />
+                  </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  {accounts.map(acc => (
-                    <div 
-                      key={acc.id} 
-                      onClick={() => {
-                        setSelectedLedgerAccountId(acc.id);
-                        setActiveSubModule('ledger');
-                      }}
-                      className="p-3 border rounded hover:border-[#8DB600] cursor-pointer hover:bg-[#8DB600]/5 transition-all text-right flex justify-between items-center"
-                    >
-                      <div>
-                        <span className="font-bold text-stone-850 text-sm block">{acc.name}</span>
-                        <span className="text-[10px] text-stone-500 block">{acc.englishName}</span>
+
+                {/* Filter and balance split computation */}
+                {(() => {
+                  const filteredCoA = accounts.filter(acc => {
+                    const term = accountSearchTerm.toLowerCase().trim();
+                    if (!term) return true;
+                    return (
+                      acc.id.toLowerCase().includes(term) ||
+                      acc.name.toLowerCase().includes(term) ||
+                      (acc.englishName && acc.englishName.toLowerCase().includes(term)) ||
+                      acc.type.toLowerCase().includes(term) ||
+                      (acc.subType && acc.subType.toLowerCase().includes(term))
+                    );
+                  });
+
+                  const halfLength = Math.ceil(filteredCoA.length / 2);
+                  const leftCoA = filteredCoA.slice(0, halfLength);
+                  const rightCoA = filteredCoA.slice(halfLength);
+
+                  const renderTable = (list: Account[]) => (
+                    <div className="overflow-x-auto border border-stone-200 rounded-lg shadow-sm">
+                      <table className="w-full text-right text-xs">
+                        <thead className="bg-[#8DB600] text-white text-xs">
+                          <tr>
+                            <th className="p-2 text-center w-16">کوڈ</th>
+                            <th className="p-2">کھاتہ کا نام</th>
+                            <th className="p-2">انگریزی نام</th>
+                            <th className="p-2">قسم</th>
+                            <th className="p-2 text-left">ابتدائی رقم</th>
+                            <th className="p-2 text-center no-print w-16">عمل</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-150">
+                          {list.map(acc => (
+                            <tr key={acc.id} className="hover:bg-stone-50/60 transition-colors">
+                              <td className="p-2 text-center font-mono font-bold text-[#7BA100]">{acc.id}</td>
+                              <td className="p-2 font-bold text-stone-850">
+                                <button 
+                                  onClick={() => {
+                                    setSelectedLedgerAccountId(acc.id);
+                                    setActiveSubModule('ledger');
+                                  }}
+                                  className="hover:underline text-right hover:text-[#7BA100] cursor-pointer"
+                                  title="لیجر کھاتہ دیکھیں"
+                                >
+                                  {acc.name}
+                                </button>
+                              </td>
+                              <td className="p-2 text-stone-500 font-mono text-[10px]">{acc.englishName}</td>
+                              <td className="p-2">
+                                <span className="bg-stone-100 text-stone-700 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                                  {acc.type === 'Asset' ? 'اثاثہ' : 
+                                   acc.type === 'Liability' ? 'واجب الادا' :
+                                   acc.type === 'Revenue' ? 'آمدنی' :
+                                   acc.type === 'Expense' ? 'اخراجات' : 'کیپیٹل'} ({acc.subType || 'Other'})
+                                </span>
+                              </td>
+                              <td className="p-2 text-left font-mono font-medium text-stone-700">
+                                {acc.openingBalance.toLocaleString()} <span className="text-[10px] text-stone-400">{acc.balanceType}</span>
+                              </td>
+                              <td className="p-2 text-center no-print">
+                                <div className="flex justify-center gap-1">
+                                  <button 
+                                    onClick={() => {
+                                      setIsAccountEditMode(true);
+                                      setAccountEditingId(acc.id);
+                                      setAccountFormData({
+                                        id: acc.id,
+                                        name: acc.name,
+                                        englishName: acc.englishName || '',
+                                        type: acc.type,
+                                        subType: acc.subType || 'Other',
+                                        openingBalance: acc.openingBalance,
+                                        openingType: acc.balanceType,
+                                        phone: acc.phone || '',
+                                        cnic: acc.cnic || '',
+                                        address: acc.address || '',
+                                        creditLimit: acc.creditLimit || 150000,
+                                        notes: acc.notes || ''
+                                      });
+                                      setShowAccountForm(true);
+                                    }}
+                                    className="p-1 hover:bg-stone-100 text-[#7BA100] rounded transition cursor-pointer"
+                                    title="ترمیم کریں"
+                                  >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button 
+                                    onClick={() => {
+                                      if (confirm(`کیا آپ واقعی کھاتہ "${acc.name}" حذف کرنا چاہتے ہیں؟`)) {
+                                        handleDeleteAccount(acc.id);
+                                      }
+                                    }}
+                                    className="p-1 hover:bg-stone-100 text-red-600 rounded transition cursor-pointer"
+                                    title="حذف کریں"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                          {list.length === 0 && (
+                            <tr>
+                              <td colSpan={6} className="text-center p-4 text-stone-400 italic">کوئی ریکارڈ نہیں ملا</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+
+                  return (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <div className="bg-stone-100 p-1.5 rounded text-xs font-bold text-stone-700 text-right">حصہ اول (Column 1)</div>
+                        {renderTable(leftCoA)}
                       </div>
-                      <div className="text-left font-mono text-xs">
-                        <span className="text-[#8DB600] font-bold block">{acc.id}</span>
-                        <span className="text-[10px] text-stone-400 block">{acc.type}</span>
+                      <div className="space-y-2">
+                        <div className="bg-stone-100 p-1.5 rounded text-xs font-bold text-stone-700 text-right">حصہ دوم (Column 2)</div>
+                        {renderTable(rightCoA)}
                       </div>
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
+
+                {/* Account Add/Edit Modal Window popup */}
+                {showAccountForm && (
+                  <div className="fixed inset-0 bg-stone-900/50 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-xl overflow-hidden shadow-2xl text-right font-sans">
+                      <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center">
+                        <span className="font-bold text-sm">
+                          {isAccountEditMode ? 'ترمیم کھاتہ فرم (Edit Chart of Account)' : 'نیا کھاتہ مندرجہ فرم (New Chart of Account)'}
+                        </span>
+                        <button 
+                          onClick={() => setShowAccountForm(false)}
+                          className="text-white hover:bg-black/15 w-6 h-6 rounded-full flex items-center justify-center font-bold text-lg cursor-pointer"
+                        >
+                          &times;
+                        </button>
+                      </div>
+
+                      <form 
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (!accountFormData.name) {
+                            alert('براہ کرم کھاتہ کا نام (اردو) درج کریں۔');
+                            return;
+                          }
+                          if (!accountFormData.id) {
+                            alert('براہ کرم کھاتہ کوڈ/نمبر درج کریں۔');
+                            return;
+                          }
+
+                          const targetAccount: Account = {
+                            id: accountFormData.id,
+                            name: accountFormData.name,
+                            englishName: accountFormData.englishName || accountFormData.name,
+                            type: accountFormData.type,
+                            subType: accountFormData.subType,
+                            openingBalance: Number(accountFormData.openingBalance) || 0,
+                            balanceType: accountFormData.openingType,
+                            phone: accountFormData.phone,
+                            cnic: accountFormData.cnic,
+                            address: accountFormData.address,
+                            creditLimit: Number(accountFormData.creditLimit) || 150000,
+                            notes: accountFormData.notes
+                          };
+
+                          if (isAccountEditMode && accountEditingId) {
+                            handleEditAccount(targetAccount);
+                          } else {
+                            if (accounts.some(a => a.id === targetAccount.id)) {
+                              alert('کھاتہ کوڈ پہلے سے موجود ہے۔ متبادل منتخب کریں۔');
+                              return;
+                            }
+                            handleAddAccount(targetAccount);
+                          }
+                          setShowAccountForm(false);
+                        }} 
+                        className="p-4 space-y-3 box-border text-xs"
+                      >
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">اکاؤنٹ کی نوعیت (Type):</label>
+                            <select
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600]"
+                              value={accountFormData.type}
+                              onChange={(e) => {
+                                const newType = e.target.value as any;
+                                const nextId = getCoANextAvailableId(newType);
+                                const defaultBalType = (newType === 'Asset' || newType === 'Expense') ? 'Dr' : 'Cr';
+                                setAccountFormData({ 
+                                  ...accountFormData, 
+                                  type: newType,
+                                  id: nextId,
+                                  openingType: defaultBalType
+                                });
+                              }}
+                            >
+                              <option value="Asset">اثاثہ کھاتہ (Asset)</option>
+                              <option value="Liability">واجب الادا کھاتہ (Liability)</option>
+                              <option value="Revenue">آمدنی کھاتہ (Revenue)</option>
+                              <option value="Expense">اخراجات کھاتہ (Expense)</option>
+                              <option value="Equity">کیپیٹل کھاتہ (Equity)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">کھاتہ نمبر / کوڈ (Code):</label>
+                            <input
+                              type="text"
+                              className="w-full p-1.5 border rounded bg-stone-50 font-mono text-stone-800 text-left outline-none focus:border-[#8DB600]"
+                              value={accountFormData.id}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, id: e.target.value })}
+                              placeholder="اکاؤنٹ کوڈ درج کریں"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">کھاتہ کا نام (اردو):</label>
+                            <input
+                              type="text"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-right font-bold"
+                              value={accountFormData.name}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, name: e.target.value })}
+                              placeholder="مثال: دکان کرایہ وغیرہ"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">انگریزی نام (English Name):</label>
+                            <input
+                              type="text"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-left"
+                              value={accountFormData.englishName}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, englishName: e.target.value })}
+                              placeholder="e.g. Shop Rent"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">کھاتہ ذیلی قسم (Sub-type):</label>
+                            <select
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600]"
+                              value={accountFormData.subType}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, subType: e.target.value })}
+                            >
+                              <option value="Other">عام کھاتہ (Other)</option>
+                              <option value="Cash">نقدی کھاتہ (Cash)</option>
+                              <option value="Bank">بینک کھاتہ (Bank)</option>
+                              <option value="Sales">فروخت ہیڈ (Sales)</option>
+                              <option value="Purchase">خریداری ہیڈ (Purchase)</option>
+                              <option value="ExpenseHead">اخراجات ہیڈ (ExpenseHead)</option>
+                              <option value="Receivable">واجب الوصول کنٹرول (Receivable)</option>
+                              <option value="Payable">واجب الادا کنٹرول (Payable)</option>
+                              <option value="Capital">سرمایہ کاری (Capital)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">موبائل نمبر (اختیاری):</label>
+                            <input
+                              type="text"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-left"
+                              value={accountFormData.phone}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, phone: e.target.value })}
+                              placeholder="0300-1234567"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">شناختی کارڈ نمبر (CNIC):</label>
+                            <input
+                              type="text"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-left"
+                              value={accountFormData.cnic}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, cnic: e.target.value })}
+                              placeholder="31202-xxxxxxx-x"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">پتہ / دکان کا پتہ:</label>
+                            <input
+                              type="text"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600]"
+                              value={accountFormData.address}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, address: e.target.value })}
+                              placeholder="لودھراں منڈی روڈ"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">ابتدائی رقم (Balance):</label>
+                            <input
+                              type="number"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-left"
+                              value={accountFormData.openingBalance}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, openingBalance: Number(e.target.value) })}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">توازن قسم (Type):</label>
+                            <select
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600]"
+                              value={accountFormData.openingType}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, openingType: e.target.value as 'Dr' | 'Cr' })}
+                            >
+                              <option value="Dr">نام واجب الوصول / خرچ (Dr - Debit)</option>
+                              <option value="Cr">جمع واجب الادا / آمدن (Cr - Credit)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-stone-600 mb-1 font-semibold text-right">ادھار لمٹ:</label>
+                            <input
+                              type="number"
+                              className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-left"
+                              value={accountFormData.creditLimit}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, creditLimit: Number(e.target.value) })}
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-stone-600 mb-1 font-semibold text-right">خاص نوٹ یا تفصیل:</label>
+                          <textarea
+                            rows={2}
+                            className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600]"
+                            value={accountFormData.notes}
+                            onChange={(e) => setAccountFormData({ ...accountFormData, notes: e.target.value })}
+                            placeholder="کھاتہ متعلقہ اہم معلومات درج کریں..."
+                          />
+                        </div>
+
+                        <div className="flex gap-2 justify-end pt-3 border-t">
+                          <button
+                            type="submit"
+                            className="bg-[#8DB600] text-white px-5 py-1.5 rounded font-bold cursor-pointer hover:bg-[#7BA100]"
+                          >
+                            محفوظ کریں
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowAccountForm(false)}
+                            className="bg-stone-200 text-stone-700 px-4 py-1.5 rounded font-bold cursor-pointer hover:bg-stone-300"
+                          >
+                            منسوخ کریں
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
