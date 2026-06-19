@@ -1203,34 +1203,27 @@ export default function App() {
                 </div>
 
                 {/* Submit button following the design block */}
-                <button
-                  type="submit"
-                  className="w-[200px] h-[59px] mr-[10px] mt-[23px] pt-[16px] pb-[16px] pr-[10px] pl-0 text-center text-[19px] leading-[24px] bg-[#0fe6fa] hover:bg-[#0dd4e8] text-stone-900 rounded-xl font-bold transition-all shadow-md active:scale-[0.99] cursor-pointer"
-                >
-                  اپنے کلاؤڈ کھاتہ میں داخل ہوں
-                </button>
+                <div className="flex justify-center w-full mt-6">
+                  <button
+                    type="submit"
+                    className="w-full h-12 text-center text-[19px] bg-[#0fe6fa] text-stone-950 rounded-full font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center"
+                  >
+                    لاگن ہوں
+                  </button>
+                </div>
               </form>
             </div>
 
             {/* BOTTOM SPECIAL FEATURES OPTION SETS */}
             <div className="border-t pt-4 mt-6 flex flex-col gap-2">
-              <span className="text-xs text-stone-500 font-medium block">نیا کاروبار رجسٹر کریں۔</span>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => setIsPinPromptOpen(true)}
-                  className="bg-orange-50 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>رجسٹر ہوں۔</span>
-                </button>
-                <button
-                  onClick={() => setIsAdminAuthModalOpen(true)}
-                  className="bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
-                >
-                  <ShieldCheck className="w-4 h-4 text-blue-800" />
-                  <span>ساس ایڈمن پینل</span>
-                </button>
-              </div>
+              <span className="text-xs text-stone-500 font-medium block">نئی رجسٹریشن کے لئے ایڈمن سے رابطہ کریں</span>
+              <button
+                onClick={() => setIsAdminAuthModalOpen(true)}
+                className="w-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+              >
+                <ShieldCheck className="w-4 h-4 text-blue-800" />
+                <span>Admin Panel</span>
+              </button>
               <div className="text-[10px] text-stone-400 font-mono text-center pt-1">
                 سافٹ ویئر کے ڈیفالٹ داخلہ لاگ ان کریڈنشلز: admin / 1558
               </div>
@@ -1325,6 +1318,105 @@ export default function App() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* 1. SECURE ADMIN PIN AUTHENTICATION MODAL */}
+        {isAdminAuthModalOpen && (
+          <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-right" dir="rtl">
+            <div className="bg-white rounded-2xl max-w-sm w-full overflow-hidden border-4 border-[#7BA100] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="bg-[#8DB600] text-white p-4 flex flex-col items-center gap-1.5 relative">
+                <Lock className="w-12 h-12 text-white" />
+                <h4 className="text-base font-black tracking-tight mt-1 text-center font-sans">
+                  ایڈمنسٹریٹر لاگ ان
+                </h4>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setIsAdminAuthModalOpen(false);
+                    setAdminPinInput('');
+                    setAdminPinError('');
+                  }}
+                  className="absolute top-4 right-4 text-white hover:text-stone-200 cursor-pointer animate-none"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-4">
+                <p className="text-xs text-stone-600 leading-relaxed font-sans text-center">
+                  سافٹ ویئر کے خفیہ ساس کنٹرول پینل تک رسائی کیلئے سیکورٹی پن کوڈ درج کریں۔
+                </p>
+
+                {adminPinError && (
+                  <div className="bg-rose-50 border border-rose-200 text-rose-800 p-2 text-xs rounded-xl font-bold text-center">
+                    {adminPinError}
+                  </div>
+                )}
+
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (adminPinInput === 'Fozia@sif1234') {
+                      setIsAdminAuthModalOpen(false);
+                      setAdminPinInput('');
+                      setAdminPinError('');
+                      setIsAdminPanelOpen(true);
+                    } else {
+                      setAdminPinError('غلط ماسٹر پن کوڈ درج کیا گیا ہے!');
+                    }
+                  }}
+                  className="space-y-4"
+                >
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-stone-700 text-right">ماسٹر پن کوڈ (PIN) :</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      value={adminPinInput}
+                      onChange={(e) => setAdminPinInput(e.target.value)}
+                      className="w-full p-2.5 border-2 border-stone-200 rounded-xl text-center font-mono focus:border-[#7BA100] outline-none text-stone-950 font-black tracking-widest"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      style={{ color: '#ffffff' }}
+                      className="flex-1 bg-red-700 hover:bg-red-800 text-white font-black text-xs py-2.5 rounded-xl cursor-pointer flex items-center justify-center text-center shadow-md transition-colors"
+                    >
+                      پن کوڈ کی تصدیق کریں
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAdminAuthModalOpen(false);
+                        setAdminPinInput('');
+                        setAdminPinError('');
+                      }}
+                      className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-900 font-black text-xs py-2.5 rounded-xl border border-stone-400 text-center cursor-pointer flex items-center justify-center shadow-md transition-colors"
+                    >
+                      منسوخ کریں
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. FULL-SCREEN SAAS ADMIN PANEL CONTROL BOARD Overlay */}
+        {isAdminPanelOpen && (
+          <SaaSAdminPanel 
+            tenants={tenants}
+            setTenants={setTenants}
+            setCurrentTenantId={setCurrentTenantId}
+            setIsAuthenticated={setIsAuthenticated}
+            setUsername={setUsername}
+            setCurrentTab={setCurrentTab}
+            onClose={() => setIsAdminPanelOpen(false)}
+          />
         )}
       </div>
     );

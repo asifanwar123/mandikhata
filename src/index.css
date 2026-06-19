@@ -50,7 +50,7 @@ body {
 }
 
 /* Enforce font-sans and crisp clear black on controls */
-input, select, textarea, button, label, select option {
+input, select, textarea, label, select option {
   font-family: var(--font-sans) !important;
   text-align: right;
   direction: rtl;
@@ -208,3 +208,138 @@ input, select, textarea {
 .double-underline {
   border-bottom: 3px double #0cdbf2;
 }
+
+/* ==========================================================================
+   PREMIUM GLOSSY PILL BUTTON STYLES (MATCH CHOSEN REFERENCE IMAGE AESTHETICS)
+   ========================================================================== */
+
+/* 1. Base style for all standard buttons across the app */
+button, .classic-btn, .pill-btn {
+  border-radius: 9999px !important; /* Fully rounded pill shape */
+  font-weight: 700 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  cursor: pointer !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12), inset 0 2px 0 rgba(255, 255, 255, 0.3) !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* 2. Normal text button padding helper to guarantee centered text without imbalances */
+button:not(.icon-only):not(.absolute):not(.raw-btn) {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+  padding-top: 0.6rem !important;
+  padding-bottom: 0.6rem !important;
+  text-align: center !important;
+}
+
+/* 3. High quality micro-interactions: slight lift on hover, slight depress on press */
+button:not(.absolute):not(.raw-btn):hover {
+  transform: translateY(-2px) scale(1.02) !important;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.18), inset 0 2px 0 rgba(255, 255, 255, 0.45) !important;
+  filter: brightness(1.12) !important;
+}
+
+button:not(.absolute):not(.raw-btn):active {
+  transform: translateY(1px) scale(0.97) !important;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(0, 0, 0, 0.1) !important;
+}
+
+/* 4. Beautiful theme color gradients corresponding to the designer board colors */
+
+/* CYAN / BLUE TABS & PRIMARY SUBMITS (e.g. Login page submit button) */
+button[class*="bg-[#0fe6fa]"],
+button[class*="bg-cyan-"],
+button.cyan-btn {
+  background: linear-gradient(180deg, #16f0ff 0%, #00bcde 100%) !important;
+  color: #000000 !important;
+  border: 1.5px solid #00acd4 !important;
+}
+
+/* RED DANGER / SYSTEM LOCK / CANCEL BUTTONS */
+button[class*="bg-red-"],
+button[class*="bg-rose-"],
+button.red-btn {
+  background: linear-gradient(180deg, #ff4c4c 0%, #c40a0a) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #aa0000 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ORANGE SUB BUTTONS / REGISTRATIONS */
+button[class*="bg-orange-"],
+button[class*="bg-amber-"],
+button.orange-btn {
+  background: linear-gradient(180deg, #ff9e16 0%, #dc6200) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #bd4e00 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* GREEN ACTIVE TABS AND VERIFIED OPERATIONS */
+button[class*="bg-[#8DB600]"],
+button[class*="bg-emerald-"],
+button[class*="bg-green-"],
+button.green-btn {
+  background: linear-gradient(180deg, #a2ed00 0%, #5d8700) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #4a6c00 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* BLUE / INDIGO NAVIGATION AND CONTROLS (e.g. Admin access, action keys) */
+button[class*="bg-blue-"],
+button[class*="bg-indigo-"],
+button.blue-btn {
+  background: linear-gradient(180deg, #3faeff 0%, #0056b3) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #004694 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* GRAY / STONE DEFAULT UNSELECTED TABS & CANCELS */
+button[class*="bg-stone-"],
+button[class*="bg-slate-"],
+button[class*="bg-gray-"],
+button.slate-btn {
+  background: linear-gradient(180deg, #8c98a5 0%, #4f5b66) !important;
+  color: #ffffff !important;
+  border: 1.5px solid #3d474f !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* 5. Safe exclusions for small raw inline utility icons or absolute layout close buttons */
+button.absolute, 
+button[class*="absolute"],
+button[class*="h-8 w-8"],
+button[class*="w-8 h-8"],
+button[class*="w-5 h-5"],
+button[class*="w-6 h-6"],
+button:has(svg):not(:has(span)),
+button.icon-btn,
+button.icon-only,
+button.raw-btn {
+  border-radius: 9999px !important;
+  padding: 6px !important;
+  min-width: unset !important;
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  color: inherit !important;
+}
+
+button.absolute:hover, 
+button[class*="absolute"]:hover,
+button:has(svg):not(:has(span)):hover {
+  transform: scale(1.1) !important;
+  box-shadow: none !important;
+  filter: brightness(1.25) !important;
+}
+
