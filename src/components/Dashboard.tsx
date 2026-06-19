@@ -90,7 +90,7 @@ export default function Dashboard({ onTileClick, stats }: DashboardProps) {
       {/* Stats Summary Panel footer replicating the screenshot live state */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 bg-white p-5 rounded-xl border border-stone-250 shadow-xs text-right divide-x divide-x-reverse divide-y md:divide-y-0 divide-stone-200/60">
         <div className="pl-4 pb-2 md:pb-0">
-          <span className="text-[10px] text-stone-500 block font-semibold leading-none mb-1 font-poppins">کل نقدی بقایا d10001</span>
+          <span className="text-[10px] text-stone-500 block font-semibold leading-none mb-1 font-poppins">کل نقدی بقایا</span>
           <span className="text-xl font-bold text-emerald-700 font-poppins">
             {stats.totalCashInHand.toLocaleString()} <span className="text-xs text-stone-400 font-poppins">Rs</span>
           </span>

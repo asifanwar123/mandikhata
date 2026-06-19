@@ -17,7 +17,7 @@ import {
   INITIAL_JOURNAL, INITIAL_WADAY 
 } from './utils/initialData';
 
-import { Lock, Unlock, HelpCircle, HardDriveDownload, Building, User, Mail, FileText, CheckCircle2, Key, CreditCard, Globe, Award, ShieldCheck, DollarSign, Smartphone, Plus, X, ChevronRight, Info, Sparkles, Copy, Eye, EyeOff } from 'lucide-react';
+import { Lock, Unlock, HelpCircle, HardDriveDownload, Building, User, Mail, FileText, CheckCircle2, Key, CreditCard, Globe, Award, ShieldCheck, DollarSign, Smartphone, Plus, X, ChevronRight, Info, Sparkles, Copy, Eye, EyeOff, Printer, Download } from 'lucide-react';
 
 export interface RegisteredCompany {
   companyId: string;
@@ -47,7 +47,14 @@ export interface RegisteredCompany {
 
 export default function App() {
   // Authentication & PIN Code Screen Replications from screenshot
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('mm_isAuthenticated') === 'true';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('mm_isAuthenticated', String(isAuthenticated));
+  }, [isAuthenticated]);
+
   const [username, setUsername] = useState('Admin');
   const [pinCode, setPinCode] = useState('');
   const [pinError, setPinError] = useState('');
@@ -404,6 +411,16 @@ export default function App() {
     } else {
       setPinError('غلط صارف نام یا پاس ورڈ درج کیا گیا ہے۔ (ڈیفالٹ اشارہ: admin / 1558)');
     }
+  };
+
+  const handleExportAccounts = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(accounts, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `Chart_Of_Accounts_Data.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   };
 
   // HANDLERS FOR DURABLE MUTATIONS
@@ -1613,6 +1630,25 @@ export default function App() {
                 <div className="bg-[#8DB600] text-white p-3 rounded flex justify-between items-center">
                   <span className="font-bold text-sm">کل کھاتہ تالیف ڈائریکٹری (آفیشل توازن)</span>
                   <span className="font-mono text-xs">{accounts.length} اکاؤنٹس رجسٹرڈ</span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      className="flex items-center gap-1 bg-white text-[#7BA100] hover:bg-stone-50 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" /> نیا کھاتہ درج کریں
+                    </button>
+                    <button 
+                      onClick={() => window.print()}
+                      className="flex items-center gap-1 bg-[#7BA100] text-white hover:bg-[#688800] px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm border border-white/20"
+                    >
+                      <Printer className="w-4 h-4" /> پرنٹ فہرست
+                    </button>
+                    <button 
+                      onClick={handleExportAccounts}
+                      className="flex items-center gap-1 bg-stone-700/80 text-white hover:bg-stone-800 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
+                    >
+                      <Download className="w-4 h-4" /> ایکسپورٹ ڈیٹا
+                    </button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {accounts.map(acc => (
