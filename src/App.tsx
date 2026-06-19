@@ -549,14 +549,13 @@ export default function App() {
                 setPinCode('');
                 setCurrentTab('dashboard');
               }}
-              style={{ color: '#ffffff' }}
-              className="flex-1 bg-red-700 hover:bg-red-800 text-white font-black text-xs py-2.5 rounded-md cursor-pointer flex items-center justify-center text-center shadow-md transition-colors"
+              className="flex-1 bg-red-700 hover:bg-red-850 text-white font-bold text-xs py-3 rounded-lg cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
             >
               ہاں، لاک کریں
             </button>
             <button
               onClick={() => setCurrentTab('dashboard')}
-              className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-900 font-black text-xs py-2.5 rounded-md border border-stone-450 text-center cursor-pointer flex items-center justify-center shadow-md transition-colors"
+              className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-950 font-bold text-xs py-3 rounded-lg border border-stone-400 cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
             >
               کینسل
             </button>
@@ -1203,14 +1202,12 @@ export default function App() {
                 </div>
 
                 {/* Submit button following the design block */}
-                <div className="flex justify-center w-full mt-6">
-                  <button
-                    type="submit"
-                    className="w-full h-12 text-center text-[19px] bg-[#0fe6fa] text-stone-950 rounded-full font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center"
-                  >
-                    لاگن ہوں
-                  </button>
-                </div>
+                <button
+                  type="submit"
+                  className="w-full h-[52px] mt-6 text-center text-[18px] bg-[#0fe6fa] hover:bg-[#0dd4e8] text-stone-950 rounded-lg font-black transition-all shadow-md active:scale-[0.98] cursor-pointer flex items-center justify-center leading-none"
+                >
+                  لاگن ہوں
+                </button>
               </form>
             </div>
 
@@ -1219,7 +1216,7 @@ export default function App() {
               <span className="text-xs text-stone-500 font-medium block">نئی رجسٹریشن کے لئے ایڈمن سے رابطہ کریں</span>
               <button
                 onClick={() => setIsAdminAuthModalOpen(true)}
-                className="w-full bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                className="w-full bg-blue-50 hover:bg-blue-100/90 border border-blue-200 text-blue-950 font-bold py-3 px-4 rounded-lg text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-[0.98] select-none text-center"
               >
                 <ShieldCheck className="w-4 h-4 text-blue-800" />
                 <span>Admin Panel</span>
@@ -1293,8 +1290,7 @@ export default function App() {
                   <div className="flex gap-2 font-sans pt-1">
                     <button
                       type="submit"
-                      style={{ color: '#ffffff' }}
-                      className="flex-1 bg-red-700 hover:bg-red-800 text-white font-black text-xs py-2.5 rounded-xl cursor-pointer flex items-center justify-center text-center shadow-md transition-colors"
+                      className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold text-xs py-3 rounded-lg cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
                     >
                       پن کوڈ کی تصدیق کریں
                     </button>
@@ -1305,7 +1301,7 @@ export default function App() {
                         setMasterPinInput('');
                         setMasterPinError('');
                       }}
-                      className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-900 font-black text-xs py-2.5 rounded-xl border border-stone-400 text-center cursor-pointer flex items-center justify-center shadow-md transition-colors"
+                      className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-950 font-bold text-xs py-3 rounded-lg border border-stone-400 cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
                     >
                       منسوخ کریں
                     </button>
@@ -1383,8 +1379,7 @@ export default function App() {
                   <div className="flex gap-2">
                     <button
                       type="submit"
-                      style={{ color: '#ffffff' }}
-                      className="flex-1 bg-red-700 hover:bg-red-800 text-white font-black text-xs py-2.5 rounded-xl cursor-pointer flex items-center justify-center text-center shadow-md transition-colors"
+                      className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold text-xs py-3 rounded-lg cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
                     >
                       پن کوڈ کی تصدیق کریں
                     </button>
@@ -1395,7 +1390,7 @@ export default function App() {
                         setAdminPinInput('');
                         setAdminPinError('');
                       }}
-                      className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-900 font-black text-xs py-2.5 rounded-xl border border-stone-400 text-center cursor-pointer flex items-center justify-center shadow-md transition-colors"
+                      className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-950 font-bold text-xs py-3 rounded-lg border border-stone-400 cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
                     >
                       منسوخ کریں
                     </button>
@@ -1844,8 +1839,7 @@ export default function App() {
                 <div className="flex gap-2">
                   <button
                     type="submit"
-                    style={{ color: '#ffffff' }}
-                    className="flex-1 bg-red-700 hover:bg-red-800 text-white font-black text-xs py-2.5 rounded-xl cursor-pointer flex items-center justify-center text-center shadow-md transition-colors"
+                    className="flex-1 bg-red-700 hover:bg-red-800 text-white font-bold text-xs py-3 rounded-lg cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
                   >
                     پن کوڈ کی تصدیق کریں
                   </button>
@@ -1856,7 +1850,7 @@ export default function App() {
                       setAdminPinInput('');
                       setAdminPinError('');
                     }}
-                    className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-900 font-black text-xs py-2.5 rounded-xl border border-stone-400 text-center cursor-pointer flex items-center justify-center shadow-md transition-colors"
+                    className="flex-1 bg-stone-200 hover:bg-stone-300 text-stone-950 font-bold text-xs py-3 rounded-lg border border-stone-400 cursor-pointer flex items-center justify-center text-center shadow-md transition-all active:scale-[0.98] select-none"
                   >
                     منسوخ کریں
                   </button>

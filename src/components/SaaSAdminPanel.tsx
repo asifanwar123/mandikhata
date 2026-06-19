@@ -463,7 +463,7 @@ export default function SaaSAdminPanel({
             </button>
             <button
               onClick={onClose}
-              className="bg-stone-800 hover:bg-stone-950 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow border border-stone-700 font-bold"
+              className="bg-stone-800 hover:bg-stone-900 text-white px-4 py-2.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-md border border-stone-700 active:scale-[0.98] select-none text-center"
             >
               <X className="w-4 h-4" />
               <span>ایڈمن پینل بند کریں</span>
@@ -1278,13 +1278,13 @@ export default function SaaSAdminPanel({
                 <button
                   type="button"
                   onClick={() => setIsNewFormVisible(false)}
-                  className="bg-stone-100 hover:bg-stone-200 border px-4 py-2 rounded-lg cursor-pointer text-stone-700"
+                  className="bg-stone-100 hover:bg-stone-200 border border-stone-300 px-5 py-2.5 rounded-lg text-stone-950 font-bold cursor-pointer flex items-center justify-center transition-all active:scale-[0.98] mt-0 text-center select-none"
                 >
                   منسوخ کریں
                 </button>
                 <button
                   type="submit"
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg font-bold cursor-pointer flex items-center gap-1.5"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-bold cursor-pointer flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] select-none text-center"
                 >
                   <Play className="w-3.5 h-3.5 fill-current" />
                   <span>آرکیسٹیٹر پائپ لائن رن کریں</span>
