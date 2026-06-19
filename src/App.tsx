@@ -96,10 +96,20 @@ export default function App() {
     localStorage.setItem('mm_currentTenantId', currentTenantId);
   }, [currentTenantId]);
 
-  // Hidden global keyboard shortcut key login for admin (Control + n) without login open this application
+  // Hidden global keyboard shortcut key login for admin (Shift + N) without login open this application
   useEffect(() => {
     const handleAdminShortcut = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+      // Prevent triggering shortcut while typing in input fields or textareas
+      const target = e.target as HTMLElement;
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.shiftKey && !e.ctrlKey && !e.altKey && !e.metaKey && e.key === 'N') {
         e.preventDefault();
         setCurrentTenantId('');
         setIsAuthenticated(true);
