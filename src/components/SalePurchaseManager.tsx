@@ -56,7 +56,7 @@ export default function SalePurchaseManager({
   const [printTargetInvoice, setPrintTargetInvoice] = useState<any | null>(null);
 
   // --- FORM VIEW STATES (Image 1) ---
-  const [partyId, setPartyId] = useState<string>(activeParties[0]?.id || '');
+  const [partyId, setPartyId] = useState<string>(suppliers[0]?.id || '');
   const [selectedProduct, setSelectedProduct] = useState<string>('P01');
   const [groupColor, setGroupColor] = useState<string>('');
   const [groupNum, setGroupNum] = useState<string>('گروپ نمبر ایک');
@@ -608,7 +608,7 @@ export default function SalePurchaseManager({
                       <td className="p-1">
                         <select
                           id={`buyer-select-${idx}`}
-                          value={row.buyerId}
+                          value={row.buyerId || ''}
                           onChange={(e) => handleRowChange(idx, 'buyerId', e.target.value)}
                           className="w-full bg-stone-50 border border-stone-400 p-1.5 rounded outline-none font-sans font-bold text-stone-850"
                         >
@@ -622,7 +622,7 @@ export default function SalePurchaseManager({
                         <input
                           id={`input-nagyana-${idx}`}
                           type="number"
-                          value={row.nagyana}
+                          value={row.nagyana || 0}
                           onChange={(e) => handleRowChange(idx, 'nagyana', parseInt(e.target.value) || 0)}
                           className="w-full p-1.5 border border-stone-400 rounded text-center bg-white text-stone-900 font-mono font-bold"
                         />
@@ -631,7 +631,7 @@ export default function SalePurchaseManager({
                         <input
                           id={`input-qty-${idx}`}
                           type="number"
-                          value={row.qty}
+                          value={row.qty || 0}
                           onChange={(e) => handleRowChange(idx, 'qty', parseInt(e.target.value) || 0)}
                           className="w-full p-1.5 border border-stone-400 rounded text-center bg-white text-stone-900 font-mono font-bold"
                         />
@@ -640,7 +640,7 @@ export default function SalePurchaseManager({
                         <input
                           id={`input-rate-${idx}`}
                           type="number"
-                          value={row.rate}
+                          value={row.rate || 0}
                           onChange={(e) => handleRowChange(idx, 'rate', parseInt(e.target.value) || 0)}
                           className="w-full p-1.5 border border-stone-400 rounded text-center bg-white text-stone-900 font-mono font-bold"
                         />
@@ -649,7 +649,7 @@ export default function SalePurchaseManager({
                         <input
                           id={`input-amount-${idx}`}
                           type="number"
-                          value={row.amount}
+                          value={row.amount || 0}
                           onChange={(e) => handleRowChange(idx, 'amount', parseInt(e.target.value) || 0)}
                           className="w-full p-1.5 border border-stone-400 rounded text-left bg-white text-stone-900 font-mono font-bold"
                         />
@@ -658,7 +658,7 @@ export default function SalePurchaseManager({
                         <input
                           id={`input-received-${idx}`}
                           type="number"
-                          value={row.receivedAmount}
+                          value={row.receivedAmount || 0}
                           placeholder="0"
                           onChange={(e) => handleRowChange(idx, 'receivedAmount', parseInt(e.target.value) || 0)}
                           className="w-full p-1.5 border border-stone-400 rounded text-left bg-white text-stone-900 font-mono font-bold"
