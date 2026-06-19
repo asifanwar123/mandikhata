@@ -1215,13 +1215,22 @@ export default function App() {
             {/* BOTTOM SPECIAL FEATURES OPTION SETS */}
             <div className="border-t pt-4 mt-6 flex flex-col gap-2">
               <span className="text-xs text-stone-500 font-medium block">نیا کاروبار رجسٹر کریں۔</span>
-              <button
-                onClick={() => setIsPinPromptOpen(true)}
-                className="w-full bg-orange-50 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>رجسٹر ہوں۔</span>
-              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setIsPinPromptOpen(true)}
+                  className="bg-orange-50 hover:bg-orange-100/80 border border-orange-200 text-orange-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>رجسٹر ہوں۔</span>
+                </button>
+                <button
+                  onClick={() => setIsAdminAuthModalOpen(true)}
+                  className="bg-blue-50 hover:bg-blue-100/80 border border-blue-200 text-blue-950 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-sm transition-all"
+                >
+                  <ShieldCheck className="w-4 h-4 text-blue-800" />
+                  <span>ساس ایڈمن پینل</span>
+                </button>
+              </div>
               <div className="text-[10px] text-stone-400 font-mono text-center pt-1">
                 سافٹ ویئر کے ڈیفالٹ داخلہ لاگ ان کریڈنشلز: admin / 1558
               </div>
