@@ -47,6 +47,26 @@ export default function Header({
 
   return (
     <header className="bg-white border-b-3 border-double border-[#7BA100] no-print select-none shadow-sm">
+      <style>{`
+        @media (max-width: 1400px) {
+          .brand-box-responsive {
+            width: auto !important;
+            height: auto !important;
+            margin-left: 0 !important;
+            padding-right: 0 !important;
+            align-items: center !important;
+            text-align: center !important;
+          }
+          .brand-inner-flex {
+            justify-content: center !important;
+          }
+          .date-span-responsive {
+            margin-top: 10px !important;
+            text-align: center !important;
+          }
+        }
+      `}</style>
+      
       {/* Top Banner Row */}
       <div className="flex flex-col md:flex-row justify-between items-center px-6 py-4 bg-gradient-to-l from-white via-[#FAF8F5] to-stone-100 border-b border-stone-200 gap-4">
         
@@ -57,7 +77,8 @@ export default function Header({
               src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjzeDsAtCYGFKat6XlJLYjtDu8NG1T5Iha4xdptJP_gWWEUcbluAdLpjXR3-XD3usEeMKl7xWmGujm-kYfoW7ryp_iJnn94QsHGrUkGL7OrMsXaRH4mBhpMAKbRU6Qvlegj2xRYyhJCu7qlukIm-bOr8VQ2cn-4VGovUcAYJrjn13KbcCWZ-ZjMHEuD1Ts/s1600/Mandi_khata-Logo.png" 
               alt="Mandi Khata Vegetable Logo" 
               referrerPolicy="no-referrer"
-              className="w-14 h-14 object-contain" 
+              className="w-14 h-14 object-contain cursor-pointer hover:opacity-85 transition-opacity" 
+              onClick={() => setCurrentTab('dashboard')}
             />
           </div>
         </div>
@@ -65,9 +86,9 @@ export default function Header({
         {/* Visually Center Area in RTL: Business Branding with Jameel Noori Nastaleeq */}
         <div 
           style={{ width: '600px', height: '100px', marginLeft: '630px', paddingRight: '10px' }}
-          className="text-right my-4 md:my-0 flex flex-col items-start justify-center pr-4"
+          className="brand-box-responsive text-right my-4 md:my-0 flex flex-col items-start justify-center pr-4"
         >
-          <div className="flex flex-wrap items-center justify-start gap-3 mb-1">
+          <div className="brand-inner-flex flex flex-wrap items-center justify-start gap-3 mb-1">
             <h1 
               style={{ fontSize: '36px' }}
               className="font-sans font-black text-black tracking-tight leading-snug drop-shadow-xs transition-all"
@@ -100,7 +121,7 @@ export default function Header({
           <div className="text-stone-900 text-xs flex flex-row items-center gap-2 text-left font-sans">
             <span 
               style={{ fontSize: '23px', lineHeight: '23px', paddingLeft: '0px', paddingBottom: '0px', marginBottom: '0px', marginTop: '60px', borderWidth: '0px', borderStyle: 'groove', borderRadius: '0px', color: '#097a09' }}
-              className="font-sans font-bold tracking-tight text-left"
+              className="date-span-responsive font-sans font-bold tracking-tight text-left"
             >
               {formattedDate}
             </span>
