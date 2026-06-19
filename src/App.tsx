@@ -1669,13 +1669,12 @@ export default function App() {
             )}
             {activeSubModule === 'accounts_directory' && (
               <div className="bg-white rounded-lg border p-4 space-y-4 text-right">
-                <div className="bg-[#8DB600] text-white p-3 rounded flex justify-between items-center">
-                  <span className="font-bold text-sm">کل کھاتہ تالیف ڈائریکٹری (آفیشل توازن)</span>
-                  <span className="font-mono text-xs">{accounts.length} اکاؤنٹس رجسٹرڈ</span>
-                </div>
-                
-                {/* Control Panel: Buttons & Search */}
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 no-print">
+                <div className="bg-[#8DB600] text-white p-3 rounded flex flex-col md:flex-row justify-between items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl font-bold font-sans">کل کھاتہ تالیف ڈائریکٹری (آفیشل توازن)</span>
+                    <span className="bg-white/20 text-white text-xs px-2 py-0.5 rounded-full font-mono">{accounts.length} کھاتہ جات</span>
+                  </div>
+
                   <div className="flex flex-wrap items-center gap-2">
                     <button
                       onClick={() => {
@@ -1699,24 +1698,27 @@ export default function App() {
                         setAccountEditingId(null);
                         setShowAccountForm(true);
                       }}
-                      className="flex items-center gap-1 bg-white text-[#7BA100] hover:bg-stone-50 px-3 py-1.5 border border-stone-200 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      className="flex items-center gap-1 bg-white text-[#7BA100] hover:bg-stone-50 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
                     >
                       <Plus className="w-4 h-4" /> نیا کھاتہ درج کریں
                     </button>
                     <button 
                       onClick={() => window.print()}
-                      className="flex items-center gap-1 bg-[#7BA100] text-white hover:bg-[#688800] px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm border border-white/20"
+                      className="flex items-center gap-1 bg-[#7BA100] text-white hover:bg-[#688800] px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm border border-white/20"
                     >
                       <Printer className="w-4 h-4" /> پرنٹ فہرست
                     </button>
                     <button 
                       onClick={handleExportAccounts}
-                      className="flex items-center gap-1 bg-stone-700/80 text-white hover:bg-stone-800 px-3 py-1.5 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
+                      className="flex items-center gap-1 bg-stone-700/80 text-white hover:bg-stone-800 px-3 py-1 rounded-md text-xs font-bold transition-all cursor-pointer shadow-sm"
                     >
                       <Download className="w-4 h-4" /> ایکسپورٹ ڈیٹا
                     </button>
                   </div>
-
+                </div>
+                
+                {/* Search Stripe set in right side */}
+                <div className="p-3 bg-stone-100 border border-stone-200 rounded-lg flex justify-end items-center gap-3 no-print">
                   <div className="relative w-full sm:max-w-md">
                     <input
                       type="text"
@@ -1725,7 +1727,7 @@ export default function App() {
                       onChange={(e) => setAccountSearchTerm(e.target.value)}
                       className="w-full pl-3 pr-10 py-1.5 text-xs text-stone-800 border-2 border-stone-300 rounded focus:border-[#8DB600] outline-none text-right placeholder-stone-400 font-sans"
                     />
-                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2 px-0 py-0" />
+                    <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
                   </div>
                 </div>
 
@@ -1856,8 +1858,8 @@ export default function App() {
 
                 {/* Account Add/Edit Modal Window popup */}
                 {showAccountForm && (
-                  <div className="fixed inset-0 bg-stone-900/50 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-xl overflow-hidden shadow-2xl text-right font-sans">
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-right animate-in fade-in duration-200" dir="rtl">
+                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 text-right font-sans">
                       <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center">
                         <span className="font-bold text-sm">
                           {isAccountEditMode ? 'ترمیم کھاتہ فرم (Edit Chart of Account)' : 'نیا کھاتہ مندرجہ فرم (New Chart of Account)'}

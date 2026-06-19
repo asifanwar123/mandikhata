@@ -180,7 +180,7 @@ export default function CustomerSupplierManager({
         </div>
 
         {/* Search and Filters Strip */}
-        <div className="p-3 bg-stone-100 border-b border-stone-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+        <div className="p-3 bg-stone-100 border-b border-stone-200 flex justify-end items-center gap-3">
           <div className="relative w-full sm:max-w-md">
             <input
               type="text"
@@ -195,8 +195,8 @@ export default function CustomerSupplierManager({
 
         {/* Dynamic Entry Form Panel (Overlay popup / Side panel style) */}
         {showForm && (
-          <div className="fixed inset-0 bg-stone-900/50 flex justify-center items-center z-50 p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-lg overflow-hidden shadow-2xl text-right">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-right animate-in fade-in duration-200" dir="rtl">
+            <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-lg overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200 text-right font-sans">
               <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center">
                 <span className="font-bold text-sm">
                   {isEditMode ? 'تدوین کھاتہ فرم' : 'نیا کھاتہ مندرجہ فرم'}
