@@ -1794,10 +1794,10 @@ export default function App() {
         <div style={{ fontSize: '18px', fontWeight: 'bold' }} className="flex gap-2.5 items-center">
           <button 
             onClick={() => setIsAdminAuthModalOpen(true)}
-            className="bg-[#1e40af]/10 hover:bg-[#1e40af]/15 text-[#1e40af] hover:text-[#1d4ed8] border border-stone-200 text-[10.5px] font-bold px-2.5 py-0.5 rounded flex items-center gap-1 transition-all cursor-pointer shadow-sm font-sans"
+            className="bg-[#1e40af]/10 hover:bg-[#1e40af]/15 text-[#1e40af] hover:text-[#1d4ed8] border border-stone-200 text-xs font-bold px-4 py-2 rounded-lg flex items-center gap-2 transition-all cursor-pointer shadow-sm font-sans"
             title="SaaS Admin Suite Control Board"
           >
-            <Lock className="w-3 h-3" />
+            <Lock className="w-4 h-4" />
             <span>ایڈمن پینل (Admin)</span>
           </button>
 

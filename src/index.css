@@ -15,6 +15,16 @@
   --font-sans: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "Playfair Display", "Noto Serif Urdu", Georgia, serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-poppins: "Poppins", sans-serif;
+}
+
+/* Add explicit classes for font switching */
+.font-poppins {
+  font-family: var(--font-poppins) !important;
+}
+
+.font-nastaliq {
+  font-family: "Jameel Noori Nastaleeq", "Noto Nastaliq Urdu", sans-serif !important;
 }
 
 html {
