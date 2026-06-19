@@ -589,7 +589,7 @@ export default function App() {
       setActiveSubModule('sale');
     } else if (tileId === 'bill_generator') {
       setCurrentTab('mandi_trade');
-      setActiveSubModule('sale');
+      setActiveSubModule('purchase');
     } else if (tileId === 'receivable_details') {
       setReportsInitialReport('receivables');
       setCurrentTab('reports');
@@ -661,7 +661,7 @@ export default function App() {
     if (newRegSuccessDetails) {
       return (
         <div className="flex flex-col justify-center items-center min-h-screen bg-stone-100 text-right font-sans p-4" dir="rtl">
-          <div className="bg-white rounded-2xl border-2 border-emerald-500 w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div className="bg-white rounded-2xl border-2 border-emerald-500 w-[95%] sm:w-[90%] max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in duration-300">
             {/* Header */}
             <div className="bg-gradient-to-r from-emerald-600 to-[#7BA100] text-white p-6 text-center space-y-2">
               <CheckCircle2 className="w-16 h-16 text-white mx-auto animate-bounce" />
@@ -816,7 +816,7 @@ export default function App() {
 
       return (
         <div className="min-h-screen bg-[#F3F4F6] py-10 px-4 text-right font-sans flex justify-center items-center" dir="rtl">
-          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-4xl border border-stone-200">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-[95%] sm:w-[90%] max-w-4xl border border-stone-200">
             {/* Header Panel */}
             <div className="bg-gradient-to-r from-[#7BA100] via-[#8DB600] to-orange-500 p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4">
               <div className="space-y-1 text-center md:text-right">
@@ -1880,7 +1880,7 @@ export default function App() {
                 {/* Account Add/Edit Modal Window popup */}
                 {showAccountForm && (
                   <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 text-right animate-in fade-in duration-200" dir="rtl">
-                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-full max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 text-right font-sans flex flex-col max-h-[85vh] overflow-hidden">
+                    <div className="bg-white rounded-2xl border-4 border-[#7BA100] w-[95%] sm:w-[90%] max-w-lg md:max-w-xl shadow-2xl animate-in zoom-in-95 duration-200 text-right font-sans flex flex-col max-h-[90vh] md:max-h-[85vh] overflow-hidden">
                       <div className="bg-[#8DB600] text-white p-3 flex justify-between items-center shrink-0">
                         <span className="font-bold text-sm">
                           {isAccountEditMode ? 'ترمیم کھاتہ فرم (Edit Chart of Account)' : 'نیا کھاتہ مندرجہ فرم (New Chart of Account)'}
@@ -2148,6 +2148,10 @@ export default function App() {
                 purchases={purchases}
                 onSaveSale={handleSaveSale}
                 onSavePurchase={handleSavePurchase}
+                setInvoices={setInvoices}
+                setPurchases={setPurchases}
+                setJournals={setJournals}
+                onClose={() => setCurrentTab('dashboard')}
                 onAddReturnItem={(ret) => {
                   // Post journal entry representing returned amount
                   const returnJournal: JournalEntry = {
@@ -2172,6 +2176,10 @@ export default function App() {
                 purchases={purchases}
                 onSaveSale={handleSaveSale}
                 onSavePurchase={handleSavePurchase}
+                setInvoices={setInvoices}
+                setPurchases={setPurchases}
+                setJournals={setJournals}
+                onClose={() => setCurrentTab('dashboard')}
                 onAddReturnItem={() => {}}
               />
             )}
