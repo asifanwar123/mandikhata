@@ -96,6 +96,23 @@ export default function App() {
     localStorage.setItem('mm_currentTenantId', currentTenantId);
   }, [currentTenantId]);
 
+  // Hidden global keyboard shortcut key login for admin (Control + n) without login open this application
+  useEffect(() => {
+    const handleAdminShortcut = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'n') {
+        e.preventDefault();
+        setCurrentTenantId('');
+        setIsAuthenticated(true);
+        setPinError('');
+        setUsername('Admin');
+      }
+    };
+    window.addEventListener('keydown', handleAdminShortcut);
+    return () => {
+      window.removeEventListener('keydown', handleAdminShortcut);
+    };
+  }, []);
+
   // Highlight show newly registered success modal/receipt details
   const [newRegSuccessDetails, setNewRegSuccessDetails] = useState<RegisteredCompany | null>(null);
 
