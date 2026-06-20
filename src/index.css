@@ -67,6 +67,62 @@ input, select, textarea, button, label, select option {
   color: #000000 !important;
 }
 
+/* Align all numeric, phones, codes, pins, values, and quantities to start on the left side (LTR) */
+input[type="number"],
+input[type="tel"],
+input.text-left,
+input.font-mono,
+input[placeholder*="0"],
+input[placeholder*="1"],
+input[placeholder*="2"],
+input[placeholder*="3"],
+input[placeholder*="4"],
+input[placeholder*="5"],
+input[placeholder*="6"],
+input[placeholder*="7"],
+input[placeholder*="8"],
+input[placeholder*="9"],
+input[placeholder*="03"],
+input[placeholder*="3"],
+input[placeholder*="X"],
+input[placeholder*="x"],
+input[placeholder*="PIN"],
+input[placeholder*="pin"],
+input[placeholder*="Pin"],
+input[id*="id"],
+input[id*="Id"],
+input[id*="ID"],
+input[id*="phone"],
+input[id*="Phone"],
+input[id*="mobile"],
+input[id*="Mobile"],
+input[id*="cnic"],
+input[id*="Cnic"],
+input[id*="qty"],
+input[id*="Qty"],
+input[id*="rate"],
+input[id*="Rate"],
+input[id*="amount"],
+input[id*="Amount"],
+input[id*="received"],
+input[id*="receivedAmount"],
+input[id*="balance"],
+input[id*="Balance"],
+input[id*="pin"],
+input[id*="Pin"],
+input[id*="PIN"],
+input[id*="opening"],
+input[id*="limit"],
+input[id*="rem"],
+input[name*="id"],
+input[name*="phone"],
+input[name*="cnic"],
+input[name*="qty"],
+input[name*="amount"] {
+  text-align: left !important;
+  direction: ltr !important;
+}
+
 /* Make sure all inputs, dialogs, forms can be easily tapped/edited and read clearly */
 input, select, textarea {
   line-height: inherit;
