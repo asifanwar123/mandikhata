@@ -281,12 +281,20 @@ export default function BackupCalendarManager({
     }
   }, [gdriveToken, backupOption]);
 
+  const getDMYDateString = () => {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2, '0');
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const yyyy = today.getFullYear();
+    return `${dd}-${mm}-${yyyy}`;
+  };
+
   const fetchGdriveBackupList = async (tokenToCheck?: string) => {
     const activeToken = tokenToCheck || gdriveToken;
     if (!activeToken) return;
     setIsLoadingGdriveFiles(true);
     try {
-      const response = await fetch("https://www.googleapis.com/drive/v3/files?q=name+contains+'mandi_khata_backup_'+and+mimeType='application/json'&orderBy=createdTime+desc&fields=files(id,name,createdTime,size)", {
+      const response = await fetch("https://www.googleapis.com/drive/v3/files?q=mimeType='application/json'&orderBy=createdTime+desc&fields=files(id,name,createdTime,size)", {
         headers: { Authorization: `Bearer ${activeToken}` }
       });
       if (response.status === 401) {
@@ -314,8 +322,8 @@ export default function BackupCalendarManager({
     setBackupStatus('گوگل ڈرائیو پر نیا کلاؤڈ بیک اپ اپلوڈ ہو رہا ہے...');
     try {
       const cleanCompName = companyName ? companyName.trim().replace(/\s+/g, '_') : 'MandiKhata';
-      const formattedDate = new Date().toISOString().split('T')[0];
-      const fileName = `mandi_khata_backup_${cleanCompName}_${formattedDate}.json`;
+      const formattedDate = getDMYDateString();
+      const fileName = `${cleanCompName}_${formattedDate}.json`;
       
       const metadata = {
         name: fileName,
@@ -482,8 +490,8 @@ export default function BackupCalendarManager({
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
         const cleanCompName = companyName ? companyName.trim().replace(/\s+/g, '_') : 'MandiKhata';
-        const formattedDate = new Date().toISOString().split('T')[0];
-        downloadAnchor.setAttribute("download", `companyregistration_${cleanCompName}_${formattedDate}.json`);
+        const formattedDate = getDMYDateString();
+        downloadAnchor.setAttribute("download", `${cleanCompName}_${formattedDate}.json`);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
