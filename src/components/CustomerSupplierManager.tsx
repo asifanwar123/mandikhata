@@ -35,6 +35,17 @@ export default function CustomerSupplierManager({
   // Basic Search
   const [searchTerm, setSearchTerm] = useState('');
   
+  const formatCNIC = (value: string): string => {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length <= 5) {
+      return digits;
+    } else if (digits.length <= 12) {
+      return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+    } else {
+      return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12, 13)}`;
+    }
+  };
+
   // Modals Toggles
   const [showAccountForm, setShowAccountForm] = useState(false);
   const [showPromiseForm, setShowPromiseForm] = useState(false);
@@ -996,7 +1007,7 @@ export default function CustomerSupplierManager({
                     type="text"
                     className="w-full p-2 border rounded-lg text-stone-800 outline-none focus:border-[#8DB600] text-left"
                     value={accountFormData.cnic}
-                    onChange={(e) => setAccountFormData({ ...accountFormData, cnic: e.target.value })}
+                    onChange={(e) => setAccountFormData({ ...accountFormData, cnic: formatCNIC(e.target.value) })}
                     placeholder="31202-xxxxxxx-x"
                   />
                 </div>

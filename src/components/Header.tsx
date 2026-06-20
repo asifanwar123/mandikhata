@@ -22,6 +22,15 @@ export default function Header({
 }: HeaderProps) {
   const [time, setTime] = useState(new Date());
 
+  const formatPhoneNumber = (phone: string) => {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.length === 11) {
+      return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+    }
+    return phone;
+  };
+
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -99,7 +108,7 @@ export default function Header({
               style={{ fontSize: '18px', textAlign: 'left', lineHeight: '25px' }}
               className="bg-yellow-100 text-black px-2 py-1 rounded font-black border border-yellow-300 font-sans"
             >
-              فون: {companyPhone}
+              فون: {formatPhoneNumber(companyPhone)}
             </span>
             <span 
               style={{ fontSize: '18px', lineHeight: '25px' }}

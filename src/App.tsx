@@ -45,6 +45,17 @@ export interface RegisteredCompany {
   licenseCode?: string;
 }
 
+const formatCNIC = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 5) {
+    return digits;
+  } else if (digits.length <= 12) {
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  } else {
+    return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12, 13)}`;
+  }
+};
+
 export default function App() {
   // Authentication & PIN Code Screen Replications from screenshot
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -956,7 +967,7 @@ export default function App() {
                       type="text" 
                       placeholder="31202-XXXXXXXX-X" 
                       value={regForm.cnicTax}
-                      onChange={e => setRegForm({...regForm, cnicTax: e.target.value})}
+                      onChange={e => setRegForm({...regForm, cnicTax: formatCNIC(e.target.value)})}
                       className="w-full p-2.5 border border-stone-300 rounded-lg text-xs font-mono outline-none focus:border-[#8DB600]"
                     />
                   </div>
@@ -2032,7 +2043,7 @@ export default function App() {
                               type="text"
                               className="w-full p-1.5 border rounded text-stone-800 outline-none focus:border-[#8DB600] text-left"
                               value={accountFormData.cnic}
-                              onChange={(e) => setAccountFormData({ ...accountFormData, cnic: e.target.value })}
+                              onChange={(e) => setAccountFormData({ ...accountFormData, cnic: formatCNIC(e.target.value) })}
                               placeholder="31202-xxxxxxx-x"
                             />
                           </div>

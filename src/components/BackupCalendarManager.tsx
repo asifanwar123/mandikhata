@@ -3,6 +3,17 @@ import { PromiseReminder, BusinessCard } from '../types';
 import { INITIAL_CARDS } from '../utils/initialData';
 import { Calendar, CheckSquare, Square, Download, Upload, Search, Share2, PhoneCall, Settings, Globe, Palette, Coins, HelpCircle, ShieldAlert, Lock, Unlock, Mail, FileText, Percent, ArrowLeft, Plus, Trash2, Terminal, Database } from 'lucide-react';
 
+const formatCNIC = (value: string): string => {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length <= 5) {
+    return digits;
+  } else if (digits.length <= 12) {
+    return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+  } else {
+    return `${digits.slice(0, 5)}-${digits.slice(5, 12)}-${digits.slice(12, 13)}`;
+  }
+};
+
 export interface RegisteredCompany {
   companyId: string;
   companyName: string;
@@ -1495,7 +1506,7 @@ export default function BackupCalendarManager({
                         <input
                           type="text"
                           value={editCnicTax}
-                          onChange={(e) => setEditCnicTax(e.target.value)}
+                          onChange={(e) => setEditCnicTax(formatCNIC(e.target.value))}
                           className="w-full p-2 border rounded-md text-xs font-mono outline-none focus:border-[#8DB600]"
                         />
                       </div>
