@@ -1003,11 +1003,6 @@ export default function BackupCalendarManager({
               
               {/* Main Info Header Banner representing the traditional mandu shop letterhead */}
               <div className="flex flex-col md:flex-row items-center gap-6 pb-6 border-b-2 border-dashed border-emerald-200">
-                <img 
-                  src="/src/assets/images/veg_urdu_logo_1781537269966.jpg" 
-                  alt="Mandi Khata Vegetable Logo" 
-                  className="w-24 h-24 rounded-full border-4 border-emerald-400 object-cover shadow-md"
-                />
                 
                 <div className="flex-1 text-center md:text-right space-y-2">
                   <span className="bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full inline-block">حالیہ ریکارڈ برائے سال {companyKhataYear}</span>
